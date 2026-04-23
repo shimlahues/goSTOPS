@@ -381,7 +381,12 @@
     font-weight:900;letter-spacing:-.02em;line-height:1.02;
     margin:0 0 8px;word-break:break-word;
   }
-  .headline .accent{font-family:'Allison',cursive;font-weight:400;letter-spacing:0;font-size:1.5em;line-height:.7;display:inline-block}
+  /* Script accent: glyphs render at 1.5em (scaled by state.accentSize at render time),
+     but line-height:0 means the inline-block contributes 0 to the line box. Glyphs
+     overflow visibly above/below the line; surrounding text's line-height is unaffected,
+     so scaling the accent no longer pushes neighbouring words apart. vertical-align
+     keeps the script glyphs sitting on the headline baseline. */
+  .headline .accent{font-family:'Allison',cursive;font-weight:400;letter-spacing:0;font-size:1.5em;line-height:0;display:inline-block;vertical-align:baseline;overflow:visible}
   .subline{font-size:.95em;font-weight:500;line-height:1.35;margin:0 0 10px;opacity:.92}
   .cta{
     display:inline-block;padding:9px 16px;border-radius:999px;
@@ -584,6 +589,46 @@
   }
   #toast.show{transform:translateX(-50%) translateY(0)}
 
+  /* ───────── Iconography ───────── */
+  .icon-grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px;
+  }
+  .icon-cell{
+    aspect-ratio:1;border-radius:10px;border:1.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;gap:3px;padding:6px 4px;
+    background:#fff;transition:all .15s ease;position:relative;
+  }
+  .icon-cell:hover{border-color:var(--ink);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+  .icon-cell.active{border-color:var(--ink);background:var(--ink);}
+  .icon-cell.active svg path{fill:#fff}
+  .icon-cell .ic-label{font-size:8px;font-weight:700;color:var(--mute);text-align:center;letter-spacing:.03em;line-height:1}
+  .icon-cell.active .ic-label{color:rgba(255,255,255,.6)}
+  /* None cell */
+  .icon-cell.icon-none{color:var(--mute);font-size:18px;font-weight:300;}
+  .icon-cell.icon-none.active{background:#fff;border-color:var(--mute);}
+
+  /* Icon layer on canvas */
+  .icon-layer{
+    position:absolute;display:flex;align-items:center;justify-content:center;
+    border-radius:50%;flex-shrink:0;z-index:8;pointer-events:none;
+  }
+  .icon-layer.tl{top:5%;left:5%}
+  .icon-layer.tr{top:5%;right:5%}
+  .icon-layer.tc{top:5%;left:50%;transform:translateX(-50%)}
+  .icon-layer.bl{bottom:6%;left:5%}
+  .icon-layer.br{bottom:6%;right:5%}
+  .icon-layer.bc{bottom:6%;left:50%;transform:translateX(-50%)}
+  .icon-layer.cc{top:50%;left:50%;transform:translate(-50%,-50%)}
+  /* CTA yellow/black */
+  .icon-layer.treat-yb{background:#FDCC08}
+  .icon-layer.treat-yb svg path{fill:#09090F}
+  /* CTA black/yellow */
+  .icon-layer.treat-by{background:#09090F}
+  .icon-layer.treat-by svg path{fill:#FDCC08}
+  /* plain — no bg, icon uses accent color via inline style */
+  .icon-layer.treat-plain{background:transparent}
+
   /* ───────── Responsive ───────── */
   @media (max-width:1200px){
     .layout{grid-template-columns:300px 1fr 280px}
@@ -784,6 +829,11 @@
           </div>
           <label class="field-label">Accent color</label>
           <div class="swatch-row" id="swAccent"></div>
+          <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>Accent size</span>
+            <small id="accentSizeVal" style="color:var(--mute);font-weight:600">100%</small>
+          </label>
+          <input type="range" id="accentSize" min="60" max="240" step="5" value="100" style="width:100%">
         </div>
       </div>
     </div>
@@ -918,6 +968,45 @@
 
           <label class="field-label">Color <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— auto uses harmony accent</small></label>
           <div class="swatch-row" id="swHand"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="sec12">
+      <div class="section-head">
+        <div class="section-num">12</div>
+        <div class="section-title">Iconography</div>
+      </div>
+      <p class="section-hint">Icons are always rendered in the CTA color pair — black + yellow. Pick an icon, then set treatment, position and size.</p>
+      <div class="section-body">
+        <label class="field-label">Icon</label>
+        <div class="icon-grid" id="iconGrid"></div>
+
+        <label class="field-label">Color treatment</label>
+        <div class="chips" id="iconTreatmentChips">
+          <button class="chip active" data-itreat="yb">
+            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#FDCC08;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)"></span>Yellow / Black
+          </button>
+          <button class="chip" data-itreat="by">
+            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#09090F;vertical-align:-1px;margin-right:4px"></span>Black / Yellow
+          </button>
+          <button class="chip" data-itreat="plain">Plain</button>
+        </div>
+
+        <label class="field-label">Position</label>
+        <div class="chips" id="iconPosChips">
+          <button class="chip deselectable" data-ipos="tl">Top-L</button>
+          <button class="chip deselectable active" data-ipos="tr">Top-R</button>
+          <button class="chip deselectable" data-ipos="tc">Top-C</button>
+          <button class="chip deselectable" data-ipos="bl">Bot-L</button>
+          <button class="chip deselectable active" data-ipos="br">Bot-R</button>
+          <button class="chip deselectable" data-ipos="bc">Bot-C</button>
+          <button class="chip deselectable" data-ipos="cc">Center</button>
+        </div>
+
+        <label class="field-label">Size <span class="slider-val" id="iconSizeVal" style="float:right">80</span></label>
+        <div class="slider-row">
+          <input type="range" id="iconSizeRange" min="40" max="180" value="80" step="4">
         </div>
       </div>
     </div>
@@ -1264,6 +1353,11 @@ const state = {
   /* per-word accent state keyed by word index (into currentWords()) */
   wordAccents:{},        // {idx: {style:'color|script|normal', color:'#ED3668'}}
   selectedWord:null,
+  /* Multiplier applied to the script-accent font-size. 1.0 = the CSS base
+     (1.5em of the headline size). Range in UI: 0.6 – 2.4. Stored on state
+     so it persists through serialize/undo and applies to every script
+     accent uniformly. */
+  accentSize:1.0,
   /* Hand swirl decoration — up to MAX_HANDS (3) slots. Each slot is its
      own placement so users can combine gestures (e.g. Victory in TL +
      Point in BR). All sidebar controls edit the slot at activeHandIdx.
@@ -1272,6 +1366,11 @@ const state = {
   activeHandIdx:0,
   /* Rainbow stripe color selection — ordered list of 2–7 brand hex colors */
   rainbowColors:['#ED3668','#6667AE','#44C7F4','#48C1C4','#F79839','#FDCC08'],
+  /* Iconography */
+  iconId: null,           // null = no icon
+  iconTreatment: 'yb',   // yb | by | plain
+  iconPos: 'tr',
+  iconSize: 80,
 };
 
 /* =======================================================================
@@ -1873,8 +1972,8 @@ $('#handResetPos').addEventListener('click',()=>{
 })();
 /* Hand color swatches — segregated into "Best Picks" (harmony accents for
    the current bg) and "Other Colors" (every remaining brand color). The
-   Auto chip and the hand's Native color are both shown; the Native gets a
-   ★ badge wherever it lands so users can always spot the brand default. */
+   top harmony accent (Claude's suggested color for the current bg) gets a
+   ★ badge, so the star tracks the bg and updates as users switch palettes. */
 const ALL_BRAND_COLORS = [
   '#ED3668','#6667AE','#44C7F4','#F79839','#48C1C4','#FDCC08',
   '#09090F','#FDF8F6','#FFFFFF'
@@ -1889,8 +1988,11 @@ function rebuildHandSwatches(){
   const effBg = state.bgMode==='image'&&state.bgImage ? state.overlayColor : state.bgColor;
   const accents = harmonyFor(effBg).accent;
   const accentsUp = new Set(accents.map(c=>c.toUpperCase()));
-  const native = HANDS[slot.key].native;
-  const nativeUp = native.toUpperCase();
+  /* ★ marks the suggested color for THIS background (first harmony accent).
+     It shifts with bg so users see a fresh recommendation every time they
+     change bg — not a hand-native default that ignored the bg. */
+  const suggestedUp = (accents[0] || '').toUpperCase();
+  const bgNameShort = ALL_ACCENT_META[(effBg||'').toUpperCase()] || effBg;
   const current = (slot.color||'').toUpperCase();
 
   // Build a swatch tile for a concrete hex color.
@@ -1898,10 +2000,10 @@ function rebuildHandSwatches(){
     const vUp = v.toUpperCase();
     const lt = ['#FFFFFF','#FDF8F6'].includes(vUp);
     const active = current===vUp ? 'active' : '';
-    const isNative = vUp === nativeUp;
+    const isSuggested = vUp === suggestedUp;
     const name = ALL_ACCENT_META[vUp] || v;
-    const title = name + (isNative ? ` — Native (${HANDS[slot.key].label})` : '');
-    const badge = isNative ? '<span class="swatch-badge" aria-label="Native brand color for this hand">★</span>' : '';
+    const title = name + (isSuggested ? ` — Suggested on ${bgNameShort}` : '');
+    const badge = isSuggested ? `<span class="swatch-badge" aria-label="Suggested color for ${bgNameShort}">★</span>` : '';
     return `<div class="swatch ${lt?'swatch-lt':''} ${active}" data-v="${v}" title="${title}" style="background:${v}">${badge}</div>`;
   };
 
@@ -1973,6 +2075,25 @@ $('#accentControls .chips').addEventListener('click',e=>{
   render();
 });
 
+/* Accent text size slider. Stores 1.0 = 100%. Applied to .accent (script)
+   spans as a multiplier over the CSS base 1.5em. Not per-word — applies
+   to every script accent uniformly so the typography reads as a single
+   family; per-word overrides can come later if needed. */
+(function(){
+  const slider = $('#accentSize');
+  const label  = $('#accentSizeVal');
+  if(!slider || !label) return;
+  const sync = ()=>{
+    const pct = +slider.value;
+    label.textContent = pct + '%';
+    state.accentSize = pct / 100;
+  };
+  slider.addEventListener('input', ()=>{ sync(); render(); });
+  /* initial paint — seed the slider from current state */
+  slider.value = Math.round((state.accentSize || 1) * 100);
+  label.textContent = slider.value + '%';
+})();
+
 /* Zoom */
 let zoom = 1;
 function setZoom(v){
@@ -2002,7 +2123,7 @@ $('#btnReset').addEventListener('click',()=>{
     showEyebrow:true, showSubline:true, showCTA:true,
     ctaStyle:'yb',
     typeScale:1.00, leading:1.02, headlineFine:0,
-    wordAccents:{}, selectedWord:null,
+    wordAccents:{}, selectedWord:null, accentSize:1.0,
     /* Hand gestures — up to MAX_HANDS slots. Each slot is its own placement
        so users can combine gestures (e.g. a Victory in TL + a Point in BR).
        All sidebar controls (Position/Size/Rot/Nudge/Flip/Soften/Color) edit
@@ -2024,6 +2145,11 @@ $('#btnReset').addEventListener('click',()=>{
   $$('#leadingChips .chip').forEach(c=>c.classList.toggle('active',+c.dataset.lh===state.leading));
   $('#headlineFine').value = 0;
   $('#headlineFineVal').textContent = '±0';
+  /* Accent size slider back to 100% */
+  if($('#accentSize')){
+    $('#accentSize').value = 100;
+    $('#accentSizeVal').textContent = '100%';
+  }
   syncAllHandUI();
   rebuildRainbowPicker();
   rebuildSolidStripePicker();
@@ -2138,6 +2264,115 @@ $('#btnExport').addEventListener('click',exportPNG);
 /* =======================================================================
    RENDER
    ======================================================================= */
+/* =======================================================================
+   ICONOGRAPHY
+   ======================================================================= */
+const ICONS = [
+  {id:'pin',     label:'Location',  vb:'0 0 24 24', path:'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'},
+  {id:'bed',     label:'Stay',      vb:'0 0 24 24', path:'M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7 4 8.34 4 10s1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z'},
+  {id:'users',   label:'Community', vb:'0 0 24 24', path:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'},
+  {id:'star',    label:'Rating',    vb:'0 0 24 24', path:'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'},
+  {id:'globe',   label:'Travel',    vb:'0 0 24 24', path:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'},
+  {id:'bolt',    label:'Energy',    vb:'0 0 24 24', path:'M7 2v11h3v9l7-12h-4l4-8z'},
+  {id:'camera',  label:'Photos',    vb:'0 0 24 24', path:'M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12a3.2 3.2 0 0 1-3.2 3.2zM9 2 7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z'},
+  {id:'backpack',label:'Explore',   vb:'0 0 24 24', path:'M20 6h-2.18c.07-.31.18-.61.18-.93C18 3.38 16.62 2 15 2c-.76 0-1.45.3-1.95.77L12 3.77l-1.05-.99C10.45 2.3 9.76 2 9 2 7.38 2 6 3.38 6 5.07c0 .32.11.62.18.93H4c-1.1 0-2 .9-2 2v3c0 .83.54 1.54 1.28 1.82L3 21c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2l-.28-8.18C21.46 12.54 22 11.83 22 11V8c0-1.1-.9-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm5 7H4V8h5.08L7 9.83 8.62 11 11 7.5l1-.73 1 .73L15.38 11 17 9.83 14.92 8H20v3z'},
+  {id:'wifi',    label:'WiFi',      vb:'0 0 24 24', path:'M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z'},
+  {id:'key',     label:'Access',    vb:'0 0 24 24', path:'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z'},
+  {id:'heart',   label:'Vibe',      vb:'0 0 24 24', path:'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'},
+  {id:'coffee',  label:'Cafe',      vb:'0 0 24 24', path:'M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z'},
+];
+
+function iconSVG(icon, color){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${icon.vb}" width="100%" height="100%"><path fill="${color}" d="${icon.path}"/></svg>`;
+}
+
+(function buildIconSection(){
+  /* ─── Icon grid ─── */
+  const grid = $('#iconGrid');
+  // "None" cell first
+  const noneCell = document.createElement('div');
+  noneCell.className = 'icon-cell icon-none' + (!state.iconId ? ' active' : '');
+  noneCell.textContent = '∅';
+  noneCell.title = 'No icon';
+  noneCell.onclick = () => { state.iconId = null; refreshIconGrid(); render(); };
+  grid.appendChild(noneCell);
+
+  ICONS.forEach(ic => {
+    const cell = document.createElement('div');
+    cell.className = 'icon-cell' + (state.iconId === ic.id ? ' active' : '');
+    cell.title = ic.label;
+    cell.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ic.vb}" width="22" height="22"><path fill="currentColor" d="${ic.path}"/></svg><span class="ic-label">${ic.label}</span>`;
+    cell.onclick = () => { state.iconId = ic.id; refreshIconGrid(); render(); };
+    grid.appendChild(cell);
+  });
+
+  function refreshIconGrid(){
+    $$('#iconGrid .icon-cell').forEach(c => c.classList.remove('active'));
+    if(!state.iconId){
+      $$('#iconGrid .icon-none')[0]?.classList.add('active');
+    } else {
+      const idx = ICONS.findIndex(i=>i.id===state.iconId);
+      if(idx>=0) $$('#iconGrid .icon-cell')[idx+1]?.classList.add('active');
+    }
+    $('#sec12').classList.toggle('done', !!state.iconId);
+  }
+
+  /* ─── Treatment chips ─── */
+  $$('#iconTreatmentChips .chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.iconTreatment = btn.dataset.itreat;
+      $$('#iconTreatmentChips .chip').forEach(b => b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+
+  /* ─── Position chips ─── */
+  $$('#iconPosChips .chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(btn.classList.contains('deselectable') && btn.classList.contains('active')){
+        // deselect — do nothing special, pos stays
+        return;
+      }
+      state.iconPos = btn.dataset.ipos;
+      $$('#iconPosChips .chip').forEach(b => b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  // Init position highlight
+  $$('#iconPosChips .chip').forEach(b => b.classList.toggle('active', b.dataset.ipos === state.iconPos));
+
+  /* ─── Size slider ─── */
+  const sizeSlider = $('#iconSizeRange');
+  const sizeVal    = $('#iconSizeVal');
+  sizeSlider.addEventListener('input', () => {
+    state.iconSize = parseInt(sizeSlider.value);
+    sizeVal.textContent = state.iconSize;
+    render();
+  });
+})();
+
+function buildIconLayerHTML(palette){
+  if(!state.iconId) return '';
+  const ic = ICONS.find(i=>i.id===state.iconId);
+  if(!ic) return '';
+
+  const sz = state.iconSize;
+  const pad = Math.round(sz * 0.25); // padding inside circle
+  const inner = sz - pad * 2;
+
+  let bgStyle = '', iconColor = '';
+  if(state.iconTreatment === 'yb'){
+    bgStyle = `background:#FDCC08;`; iconColor = '#09090F';
+  } else if(state.iconTreatment === 'by'){
+    bgStyle = `background:#09090F;`; iconColor = '#FDCC08';
+  } else {
+    bgStyle = `background:transparent;`; iconColor = palette.accent;
+  }
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ic.vb}" width="${inner}" height="${inner}"><path fill="${iconColor}" d="${ic.path}"/></svg>`;
+  return `<div class="icon-layer ${state.iconPos}" style="width:${sz}px;height:${sz}px;border-radius:50%;${bgStyle}padding:${pad}px;">${svg}</div>`;
+}
+
 function render(){
   const fmt = FORMATS[state.format];
   const canvas = $('#canvas');
@@ -2191,7 +2426,13 @@ function render(){
       const myIdx = idx++;
       const acc = state.wordAccents[myIdx];
       if(!acc) return escapeHtml(tok);
-      if(acc.style==='script') return `<span class="accent" style="color:${acc.color}">${escapeHtml(tok)}</span>`;
+      if(acc.style==='script'){
+        /* 1.5em is the CSS baseline on .accent; state.accentSize is the
+           user-facing multiplier (1.0 = 100% in the slider). Multiplying
+           here preserves the baseline look while letting users scale up/down. */
+        const fs = (1.5 * (state.accentSize || 1)).toFixed(3);
+        return `<span class="accent" style="color:${acc.color};font-size:${fs}em">${escapeHtml(tok)}</span>`;
+      }
       if(acc.style==='color')  return `<span style="color:${acc.color}">${escapeHtml(tok)}</span>`;
       return escapeHtml(tok);
     }).join('');
@@ -2251,6 +2492,7 @@ function render(){
   });
 
   const logoHTML = buildLogoHTML();
+  const iconHTML = buildIconLayerHTML(palette);
 
   const eyebrowHTML = state.showEyebrow && state.eyebrow ?
     `<span class="eyebrow" style="background:${palette.accent}22;color:${palette.ink};border:1px solid ${palette.accent};font-size:${eyebrowSize}px">${escapeHtml(state.eyebrow)}</span>` : '';
@@ -2271,6 +2513,7 @@ function render(){
     ${stripeEl}
     ${handsHTML}
     ${logoHTML}
+    ${iconHTML}
     <div class="content ${contentPos}" style="text-align:${textAlign}">
       ${eyebrowHTML}
       <h1 class="headline" style="color:${palette.ink};font-size:${headlineSize}px;line-height:${leading}">${headlineHTML}</h1>
@@ -2291,6 +2534,7 @@ function render(){
   $('#sec8').classList.toggle('done', state.logoPos!=='none');
   $('#sec9').classList.toggle('done', state.stripe!=='none');
   $('#sec10').classList.toggle('done', state.hands.length > 0);
+  $('#sec12').classList.toggle('done', !!state.iconId);
 
   /* rebuild word chips */
   buildWordChips();

@@ -1,3 +1,7 @@
+<!-- v8 — 2026-04-25; Headline + Subline color pickers added;
+     same Auto / Best Picks / Other Colors pattern; null = harmony auto;
+     shuffle resets all manual color overrides (eyebrow/text/headline/subline)
+     so coordinated palette stays in control -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,6 +104,30 @@
   .section-hint{font-size:11px;color:var(--mute);margin:0 0 10px 32px;line-height:1.4}
   .section-body{padding-left:0;min-width:0}
 
+  /* Section-head visibility toggle (right-aligned compact switch) */
+  .section-head .head-toggle{margin-left:auto;flex:0 0 auto}
+
+  /* Subsection — used inside the Text section to group eyebrow/headline/subline/accents.
+     Lighter divider, slightly indented, smaller heading. */
+  .subsection{
+    padding:14px 0;
+    border-top:1px dashed var(--line);
+  }
+  .subsection:first-child{border-top:none;padding-top:4px}
+  .sub-head{
+    display:flex;align-items:center;gap:10px;margin-bottom:8px;
+  }
+  .sub-title{
+    font-weight:700;font-size:11px;color:var(--ink);
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+  .sub-head .head-toggle{margin-left:auto}
+
+  /* Visibility-off appearance: gray out the section body so it's clear the
+     element won't render. Body still interactive (so you can pre-style). */
+  .section.is-hidden .section-body{opacity:.45}
+  .subsection.is-hidden{opacity:.45}
+
   .field-label{
     display:block;font-size:11px;font-weight:700;color:var(--mute);
     text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;
@@ -145,6 +173,32 @@
   .layout-tile.deselectable.active::after{
     position:absolute;top:4px;right:6px;margin:0;
   }
+
+  /* Vertical pills with embedded shuffle icon */
+  .vertical-pill{position:relative;display:inline-flex;align-items:center;gap:6px}
+  .vertical-pill .pill-name{display:inline-block}
+  .vertical-pill .pill-shuffle{
+    display:none; width:18px; height:18px; line-height:18px;
+    text-align:center; border-radius:50%;
+    font-size:13px; font-weight:700;
+    background:rgba(255,255,255,.18); color:inherit;
+    margin-left:2px; cursor:pointer;
+    transition:transform .25s ease, background .15s ease;
+  }
+  .vertical-pill.active .pill-shuffle{display:inline-block}
+  .vertical-pill .pill-shuffle:hover{background:rgba(255,255,255,.32);transform:rotate(180deg)}
+
+  /* Layout grid with skeleton previews — 3-column grid */
+  #layoutGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .chip.layout-chip{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:8px 4px 6px;border-radius:10px;text-align:center;
+    line-height:1.1;min-height:64px;
+  }
+  .chip.layout-chip .layout-skel{flex:0 0 auto;display:block}
+  .chip.layout-chip .layout-chip-label{font-size:10px;font-weight:600;letter-spacing:.01em}
+  .chip.layout-chip.active .layout-skel{color:#fff}
+  .chip.layout-chip:not(.active) .layout-skel{color:var(--ink)}
 
   /* Color swatches */
   .swatch-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
@@ -376,6 +430,11 @@
     font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     display:inline-block;padding:4px 10px;border-radius:999px;
     margin-bottom:10px;
+    /* Pill must always be a single line — pill grows horizontally with text;
+       the size slider scales the font to manage proportion. */
+    white-space:nowrap;
+    max-width:100%;
+    overflow:hidden;text-overflow:ellipsis;
   }
   .headline{
     font-weight:900;letter-spacing:-.02em;line-height:1.02;
@@ -638,6 +697,143 @@
     .sidebar, .sidebar.right{max-height:none;border-right:none;border-left:none;border-bottom:1px solid var(--line)}
     .stage{padding:20px 12px}
   }
+
+
+.section-head { display: flex; align-items: center; gap: 10px; }
+/* Section visibility toggle slides to the right of the heading */
+.section-head .head-toggle { margin-left: auto; }
+
+/* ============================================
+   RESPONSIVE LAYOUT
+   ============================================ */
+@media (max-width: 1023px) {
+  body { display: block; }
+  .sidebar { 
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    width: 100%; max-width: 100%; height: 70vh; max-height: 70vh;
+    transform: translateY(calc(100% - 56px));
+    transition: transform 0.3s ease;
+    z-index: 100;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .sidebar.open { transform: translateY(0); }
+  .sidebar::before {
+    content: 'Edit ▲';
+    position: sticky; top: 0; display: block;
+    height: 56px; line-height: 56px; text-align: center;
+    background: #fff; color: #09090F;
+    font-weight: 600; font-size: 14px; cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    z-index: 1;
+  }
+  .sidebar.open::before { content: 'Done ▼'; }
+  .sidebar-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: calc(70vh - 56px);
+  }
+  .canvas-wrap, main, .stage {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 16px !important;
+    padding-bottom: 80px !important;
+  }
+  .canvas {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .layout { display: block; }
+  .sidebar.right { display: none; }
+}
+
+@media (max-width: 767px) {
+  .sidebar { height: 80vh; max-height: 80vh; }
+  .sidebar-body { height: calc(80vh - 56px); }
+  .field-label { font-size: 13px; }
+  .chip, .swatch, button { min-height: 36px; }
+  input[type="range"] { height: 36px; }
+  input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
+  input[type="text"], input[type="number"], textarea, select {
+    min-height: 44px; font-size: 16px;
+  }
+  .section-title { font-size: clamp(15px, 4vw, 18px); }
+  .section-num { width: 28px; height: 28px; font-size: 13px; }
+  .toast { max-width: 90vw; left: 50%; transform: translateX(-50%); right: auto; bottom: 100px; }
+}
+
+@media (max-width: 480px) {
+  .canvas-wrap, main, .stage { padding: 8px !important; padding-bottom: 80px !important; }
+  .sidebar { border-radius: 12px 12px 0 0; }
+}
+
+@media (hover: none) {
+  .swatch { min-width: 32px; min-height: 32px; }
+  .chip { padding: 8px 12px; }
+}
+
+/* ============================================
+   GROUPED SWATCH PICKERS (eyebrow + eyebrow text)
+   Uses flex-wrap because the parent wraps multiple .swatch-row groups
+   that would break the default grid layout.
+   ============================================ */
+#swEyebrow, #swEyebrowText, #swAccent, #swHeadline, #swSubline {
+  display:flex; flex-direction:column; gap:0; min-width:0;
+}
+#swEyebrow .swatch-row, #swEyebrowText .swatch-row, #swAccent .swatch-row,
+#swHeadline .swatch-row, #swSubline .swatch-row {
+  display:flex; flex-wrap:wrap; gap:6px; padding-top:4px; min-width:0;
+}
+#swEyebrow .swatch-row .swatch, #swEyebrowText .swatch-row .swatch, #swAccent .swatch-row .swatch,
+#swHeadline .swatch-row .swatch, #swSubline .swatch-row .swatch {
+  flex:0 0 calc((100% - 30px) / 6);
+  max-width:calc((100% - 30px) / 6);
+  min-width:0;
+  height:28px;
+}
+.swatch-group { padding-top:8px; }
+.swatch-group small {
+  color:var(--mute, #999); font-size:11px; display:block;
+  margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;
+  font-weight:600;
+}
+/* Auto-tile: bicolor split with a subtle glyph so it's always visually distinct */
+.swatch.swatch-auto{
+  border:2px dashed rgba(0,0,0,0.35) !important;
+  position:relative; overflow:hidden;
+}
+.swatch.swatch-auto.active{
+  border-color:var(--ink) !important;
+  box-shadow:0 0 0 2px var(--ink), 0 0 0 4px #fff;
+}
+.swatch.swatch-auto .auto-glyph{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:900; color:#fff;
+  text-shadow:0 0 3px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.9);
+  letter-spacing:0; line-height:1;
+  pointer-events:none;
+}
+.swatch.suggested::after {
+  content:'★'; position:absolute; top:-4px; right:-2px;
+  font-size:11px; color:#FDCC08;
+  text-shadow:0 0 2px #000, 0 0 2px #000;
+  pointer-events:none; line-height:1;
+}
+.swatch { position:relative; }
+
+/* ============================================
+   SECTION COLLAPSE
+   ============================================ */
+/* Section heads are static — no collapse, no chevron. The optional visibility
+   toggle (a .switch) sits at the right edge for sections that map to a single
+   on-canvas element (Logo, Border, CTA, Hands, Stripe, Eyebrow subsection,
+   Subline subsection). */
+
+/* ============================================
+   BORDER FRAME (inner-only mode)
+   ============================================ */
+.border-frame { will-change:transform; }
 </style>
 </head>
 <body>
@@ -662,9 +858,10 @@
 
 <div class="layout">
 
-  <!-- LEFT SIDEBAR — Content & Color -->
+  <!-- LEFT SIDEBAR — Setup, Layout, Frame -->
   <aside class="sidebar left">
 
+    <!-- 1. FORMAT -->
     <div class="section done" id="sec1">
       <div class="section-head">
         <div class="section-num">1</div>
@@ -675,20 +872,33 @@
       </div>
     </div>
 
+    <!-- 2. VERTICAL -->
     <div class="section" id="sec2">
       <div class="section-head">
         <div class="section-num">2</div>
         <div class="section-title">Vertical</div>
       </div>
-      <p class="section-hint">Pick a preset to auto-set color + tone.</p>
+      <p class="section-hint">Pick a preset to auto-set color + tone. Click ⟳ on the active pill to shuffle that vertical.</p>
       <div class="section-body">
         <div class="chips" id="verticalChips"></div>
       </div>
     </div>
 
+    <!-- 3. LAYOUT -->
     <div class="section" id="sec3">
       <div class="section-head">
         <div class="section-num">3</div>
+        <div class="section-title">Layout</div>
+      </div>
+      <div class="section-body">
+        <div class="layout-grid" id="layoutGrid"></div>
+      </div>
+    </div>
+
+    <!-- 4. BACKGROUND -->
+    <div class="section" id="sec4">
+      <div class="section-head">
+        <div class="section-num">4</div>
         <div class="section-title">Background</div>
       </div>
       <div class="section-body">
@@ -725,123 +935,12 @@
       </div>
     </div>
 
-    <div class="section" id="sec4">
-      <div class="section-head">
-        <div class="section-num">4</div>
-        <div class="section-title">Headline</div>
-      </div>
-      <div class="section-body">
-        <label class="field-label">Eyebrow (optional)</label>
-        <input class="input" id="eyebrowInput" placeholder="e.g. Himachal Calling" maxlength="32">
-        <label class="field-label">Headline</label>
-        <textarea class="textarea lg" id="headlineInput" maxlength="80">Roam,{break}sleep &amp; repeat</textarea>
-        <div class="counter"><small></small><small id="hlCount">0 / 80</small></div>
-        <label class="field-label">Subline (optional)</label>
-        <textarea class="textarea" id="sublineInput" placeholder="One line of detail" maxlength="100"></textarea>
-        <div class="counter"><small></small><small id="slCount">0 / 100</small></div>
-
-        <label class="field-label" style="margin-top:14px">Type scale</label>
-        <div class="chips" id="typeScaleChips">
-          <button class="chip deselectable" data-scale="0.80">XS</button>
-          <button class="chip deselectable" data-scale="0.90">S</button>
-          <button class="chip active" data-scale="1.00">M</button>
-          <button class="chip deselectable" data-scale="1.15">L</button>
-          <button class="chip deselectable" data-scale="1.30">XL</button>
-          <button class="chip deselectable" data-scale="1.50">XXL</button>
-        </div>
-
-        <label class="field-label">Line height</label>
-        <div class="chips" id="leadingChips">
-          <button class="chip deselectable" data-lh="0.92">Tight</button>
-          <button class="chip active" data-lh="1.02">Snug</button>
-          <button class="chip deselectable" data-lh="1.15">Airy</button>
-        </div>
-
-        <label class="field-label">Fine-tune headline</label>
-        <div class="slider-row">
-          <input type="range" id="headlineFine" min="-20" max="40" value="0" step="1">
-          <span class="slider-val" id="headlineFineVal">±0</span>
-        </div>
-      </div>
-    </div>
-
+    <!-- 5. LOGO (visibility toggle in head) -->
     <div class="section" id="sec5">
       <div class="section-head">
         <div class="section-num">5</div>
-        <div class="section-title">Call to action</div>
-      </div>
-      <div class="section-body">
-        <input class="input" id="ctaInput" placeholder="e.g. Book your stop →" maxlength="30">
-        <label class="field-label">CTA style</label>
-        <div class="chips" id="ctaStyleChips">
-          <button class="chip active" data-cta="yb">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FDCC08;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)"></span>Yellow / Black
-          </button>
-          <button class="chip" data-cta="by">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#09090F;vertical-align:-1px;margin-right:4px"></span>Black / Yellow
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </aside>
-
-  <!-- STAGE -->
-  <main class="stage">
-    <div class="zoom-bar">
-      <button id="zoomOut" title="Zoom out">−</button>
-      <span class="zoom-val" id="zoomVal">100%</span>
-      <button id="zoomIn" title="Zoom in">+</button>
-      <button id="zoomFit" title="Fit">⤢</button>
-      <span class="format-badge" id="formatBadge">1080 × 1350</span>
-    </div>
-    <div class="canvas-wrap" id="canvasWrap">
-      <div class="canvas" id="canvas"></div>
-    </div>
-  </main>
-
-  <!-- RIGHT SIDEBAR — Styling -->
-  <aside class="sidebar right">
-
-    <div class="section" id="sec6">
-      <div class="section-head">
-        <div class="section-num">6</div>
-        <div class="section-title">Layout</div>
-      </div>
-      <div class="section-body">
-        <div class="layout-grid" id="layoutGrid"></div>
-      </div>
-    </div>
-
-    <div class="section" id="sec7">
-      <div class="section-head">
-        <div class="section-num">7</div>
-        <div class="section-title">Word Accents</div>
-      </div>
-      <p class="section-hint">Click a word, then pick a style. Only colors that read well on your background are shown.</p>
-      <div class="section-body">
-        <div id="wordChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div id="accentControls" style="display:none">
-          <div class="chips">
-            <button class="chip" data-style="normal">Normal</button>
-            <button class="chip" data-style="color">Color</button>
-            <button class="chip" data-style="script">Script</button>
-          </div>
-          <label class="field-label">Accent color</label>
-          <div class="swatch-row" id="swAccent"></div>
-          <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span>Accent size</span>
-            <small id="accentSizeVal" style="color:var(--mute);font-weight:600">100%</small>
-          </label>
-          <input type="range" id="accentSize" min="60" max="240" step="5" value="100" style="width:100%">
-        </div>
-      </div>
-    </div>
-
-    <div class="section" id="sec8">
-      <div class="section-head">
-        <div class="section-num">8</div>
         <div class="section-title">Logo</div>
+        <div class="switch on head-toggle" id="tg-logo" data-toggle="logoOn" title="Show logo on canvas"></div>
       </div>
       <div class="section-body">
         <label class="field-label">Placement</label>
@@ -853,7 +952,6 @@
           <button class="chip deselectable" data-pos="br">Bot-R</button>
           <button class="chip deselectable" data-pos="bc">Bot-C</button>
           <button class="chip deselectable" data-pos="cc">Center</button>
-          <button class="chip" data-pos="none">None</button>
         </div>
         <label class="field-label">Lockup</label>
         <div class="chips" id="logoLockup">
@@ -874,51 +972,187 @@
       </div>
     </div>
 
-    <div class="section" id="sec9">
+    <!-- 6. BORDER (visibility toggle in head) -->
+    <div class="section" id="sec6">
       <div class="section-head">
-        <div class="section-num">9</div>
-        <div class="section-title">Rainbow Stripe</div>
+        <div class="section-num">6</div>
+        <div class="section-title">Border</div>
+        <div class="switch head-toggle" id="tg-border" data-toggle="borderOn"></div>
       </div>
       <div class="section-body">
-        <label class="field-label">Style</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="stripe-option deselectable active" data-stripe="rainbow"><span class="stripe-preview rainbow"></span>Rainbow</button>
-          <button class="stripe-option deselectable" data-stripe="tri"><span class="stripe-preview tri"></span>Trio</button>
-          <button class="stripe-option deselectable" data-stripe="solid"><span class="stripe-preview solid"></span>Solid</button>
-          <button class="stripe-option" data-stripe="none"><span class="stripe-preview none"></span>None</button>
-        </div>
-        <label class="field-label">Position</label>
-        <div class="chips" id="stripePos">
-          <button class="chip deselectable" data-spos="top">Top</button>
-          <button class="chip active" data-spos="bottom">Bottom</button>
-          <button class="chip deselectable" data-spos="left">Left</button>
-          <button class="chip deselectable" data-spos="right">Right</button>
+        <label class="field-label">Color</label>
+        <div class="swatch-row" id="swBorder"></div>
+
+        <label class="field-label">Width <span class="slider-val" id="borderWidthVal" style="float:right">16px</span></label>
+        <div class="slider-row">
+          <input type="range" id="borderWidthRange" min="0" max="48" value="16" step="1">
         </div>
 
-        <div id="rainbowColorBox">
-          <label class="field-label" style="display:flex;justify-content:space-between;align-items:center">
-            <span>Rainbow colors <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— tap to toggle (min 2)</small></span>
-            <button type="button" id="rainbowReset" class="mini-btn" title="Reset to all 6 brand colors">Reset</button>
-          </label>
-          <div class="rainbow-picker" id="rainbowPicker"></div>
-          <div class="rainbow-preview" id="rainbowPreview"></div>
-        </div>
-
-        <!-- Shown only when stripe style === 'solid'. Pick one brand color. -->
-        <div id="solidStripeColorBox" style="display:none">
-          <label class="field-label">Stripe color <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— pick one brand color</small></label>
-          <div class="swatch-row" id="stripeColorPicker"></div>
+        <label class="field-label">Corner radius <span class="slider-val" id="outerRadiusVal" style="float:right">0px</span></label>
+        <div class="slider-row">
+          <input type="range" id="outerRadiusRange" min="0" max="80" value="0" step="1">
         </div>
       </div>
     </div>
 
-    <div class="section" id="sec10">
+  </aside>
+
+  <!-- STAGE -->
+  <main class="stage">
+    <div class="zoom-bar">
+      <button id="zoomOut" title="Zoom out">−</button>
+      <span class="zoom-val" id="zoomVal">100%</span>
+      <button id="zoomIn" title="Zoom in">+</button>
+      <button id="zoomFit" title="Fit">⤢</button>
+      <span class="format-badge" id="formatBadge">1080 × 1350</span>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="canvas" id="canvas"></div>
+    </div>
+  </main>
+
+  <!-- RIGHT SIDEBAR — Text & Decorations -->
+  <aside class="sidebar right">
+
+    <!-- 7. TEXT — eyebrow + headline + subline + accents all in one place -->
+    <div class="section" id="sec7">
       <div class="section-head">
-        <div class="section-num">10</div>
-        <div class="section-title">Hand gesture</div>
+        <div class="section-num">7</div>
+        <div class="section-title">Text</div>
       </div>
       <div class="section-body">
-        <p class="section-hint">Brand arm swirl — add up to 3. Tap a hand to add/remove; tap a slot to switch which one the controls edit.</p>
+
+        <!-- 7a. Eyebrow pill -->
+        <div class="subsection">
+          <div class="sub-head">
+            <div class="sub-title">Eyebrow Pill</div>
+            <div class="switch on head-toggle" id="tg-eyebrow" data-toggle="showEyebrow"></div>
+          </div>
+          <input class="input" id="eyebrowInput" placeholder="e.g. Himachal Calling" maxlength="32">
+          <label class="field-label">Pill size <span class="slider-val" id="eyebrowScaleVal" style="float:right">100%</span></label>
+          <div class="slider-row">
+            <input type="range" id="eyebrowScale" min="70" max="180" value="100" step="2">
+          </div>
+          <label class="field-label">Pill color</label>
+          <div id="swEyebrow"></div>
+          <label class="field-label" style="margin-top:8px">Text color</label>
+          <div id="swEyebrowText"></div>
+        </div>
+
+        <!-- 7b. Headline -->
+        <div class="subsection">
+          <div class="sub-head"><div class="sub-title">Headline</div></div>
+          <textarea class="textarea lg" id="headlineInput" maxlength="80">Roam,{break}sleep &amp; repeat</textarea>
+          <div class="counter"><small></small><small id="hlCount">0 / 80</small></div>
+
+          <label class="field-label" style="margin-top:10px">Type scale</label>
+          <div class="chips" id="typeScaleChips">
+            <button class="chip deselectable" data-scale="0.80">XS</button>
+            <button class="chip deselectable" data-scale="0.90">S</button>
+            <button class="chip active" data-scale="1.00">M</button>
+            <button class="chip deselectable" data-scale="1.15">L</button>
+            <button class="chip deselectable" data-scale="1.30">XL</button>
+            <button class="chip deselectable" data-scale="1.50">XXL</button>
+          </div>
+
+          <label class="field-label">Line height</label>
+          <div class="chips" id="leadingChips">
+            <button class="chip deselectable" data-lh="0.92">Tight</button>
+            <button class="chip active" data-lh="1.02">Snug</button>
+            <button class="chip deselectable" data-lh="1.15">Airy</button>
+          </div>
+
+          <label class="field-label">Fine-tune size</label>
+          <div class="slider-row">
+            <input type="range" id="headlineFine" min="-20" max="40" value="0" step="1">
+            <span class="slider-val" id="headlineFineVal">±0</span>
+          </div>
+          <label class="field-label">Title kerning <span class="slider-val" id="titleKerningVal">-0.020em</span></label>
+          <div class="slider-row">
+            <input type="range" id="titleKerningRange" min="-60" max="120" value="-20" step="1">
+          </div>
+
+          <label class="field-label" style="margin-top:10px">Headline color</label>
+          <div id="swHeadline"></div>
+        </div>
+
+        <!-- 7c. Subline -->
+        <div class="subsection">
+          <div class="sub-head">
+            <div class="sub-title">Subline</div>
+            <div class="switch on head-toggle" id="tg-subline" data-toggle="showSubline"></div>
+          </div>
+          <textarea class="textarea" id="sublineInput" placeholder="One line of detail" maxlength="100"></textarea>
+          <div class="counter"><small></small><small id="slCount">0 / 100</small></div>
+
+          <label class="field-label" style="margin-top:10px">Subline color</label>
+          <div id="swSubline"></div>
+        </div>
+
+        <!-- 7d. Word Accents -->
+        <div class="subsection">
+          <div class="sub-head"><div class="sub-title">Word Accents</div></div>
+          <p class="section-hint">Click a word, then pick a style. Only on-brand colors that read well on your background are shown.</p>
+          <div id="wordChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+          <div id="accentControls" style="display:none">
+            <div class="chips">
+              <button class="chip" data-style="normal">Normal</button>
+              <button class="chip" data-style="color">Color</button>
+              <button class="chip" data-style="script">Script</button>
+            </div>
+            <label class="field-label">Accent color</label>
+            <div id="swAccent"></div>
+            <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span>Accent size</span>
+              <small id="accentSizeVal" style="color:var(--mute);font-weight:600">100%</small>
+            </label>
+            <input type="range" id="accentSize" min="60" max="240" step="5" value="100" style="width:100%">
+            <label class="field-label">Accent kerning <span class="slider-val" id="accentKerningVal">0em</span></label>
+            <div class="slider-row">
+              <input type="range" id="accentKerningRange" min="-60" max="120" value="0" step="1">
+            </div>
+            <div class="field" id="accentNudgeFields" style="display:none">
+              <label class="field-label">Nudge X <span class="slider-val" id="accentNudgeXVal">0px</span></label>
+              <input type="range" id="accentNudgeXRange" min="-60" max="60" value="0" step="1">
+              <label class="field-label" style="margin-top:8px">Nudge Y <span class="slider-val" id="accentNudgeYVal">0px</span></label>
+              <input type="range" id="accentNudgeYRange" min="-60" max="60" value="0" step="1">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 8. CALL TO ACTION (visibility toggle in head) -->
+    <div class="section" id="sec8">
+      <div class="section-head">
+        <div class="section-num">8</div>
+        <div class="section-title">Call To Action</div>
+        <div class="switch on head-toggle" id="tg-cta" data-toggle="showCTA"></div>
+      </div>
+      <div class="section-body">
+        <input class="input" id="ctaInput" placeholder="e.g. Book your stop →" maxlength="30">
+        <label class="field-label">Style</label>
+        <div class="chips" id="ctaStyleChips">
+          <button class="chip active" data-cta="yb">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FDCC08;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)"></span>Yellow / Black
+          </button>
+          <button class="chip" data-cta="by">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#09090F;vertical-align:-1px;margin-right:4px"></span>Black / Yellow
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. HAND GESTURE (visibility toggle in head) -->
+    <div class="section" id="sec9">
+      <div class="section-head">
+        <div class="section-num">9</div>
+        <div class="section-title">Hand Gesture</div>
+        <div class="switch on head-toggle" id="tg-hands" data-toggle="handsOn" title="Show hand gestures on canvas"></div>
+      </div>
+      <div class="section-body">
+        <p class="section-hint">Brand arm swirl — add up to 2. Tap a hand to add/remove; tap a slot to switch which one the controls edit.</p>
         <div class="hand-picker" id="handPicker"></div>
         <div class="hand-slots" id="handSlots" aria-label="Hand slots"></div>
 
@@ -966,68 +1200,46 @@
             <div class="switch" id="tg-handsoft" data-toggle="handSoft"></div>
           </div>
 
-          <label class="field-label">Color <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— auto uses harmony accent</small></label>
+          <label class="field-label">Color</label>
           <div class="swatch-row" id="swHand"></div>
         </div>
       </div>
     </div>
 
-    <div class="section" id="sec12">
+    <!-- 10. RAINBOW STRIPE (visibility toggle in head) -->
+    <div class="section" id="sec10">
       <div class="section-head">
-        <div class="section-num">12</div>
-        <div class="section-title">Iconography</div>
+        <div class="section-num">10</div>
+        <div class="section-title">Rainbow Stripe</div>
+        <div class="switch head-toggle" id="tg-stripe" data-toggle="stripeOn" title="Show stripe on canvas"></div>
       </div>
-      <p class="section-hint">Icons are always rendered in the CTA color pair — black + yellow. Pick an icon, then set treatment, position and size.</p>
       <div class="section-body">
-        <label class="field-label">Icon</label>
-        <div class="icon-grid" id="iconGrid"></div>
-
-        <label class="field-label">Color treatment</label>
-        <div class="chips" id="iconTreatmentChips">
-          <button class="chip active" data-itreat="yb">
-            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#FDCC08;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)"></span>Yellow / Black
-          </button>
-          <button class="chip" data-itreat="by">
-            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#09090F;vertical-align:-1px;margin-right:4px"></span>Black / Yellow
-          </button>
-          <button class="chip" data-itreat="plain">Plain</button>
+        <label class="field-label">Style</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="stripe-option deselectable active" data-stripe="rainbow"><span class="stripe-preview rainbow"></span>Rainbow</button>
+          <button class="stripe-option deselectable" data-stripe="tri"><span class="stripe-preview tri"></span>Trio</button>
+          <button class="stripe-option deselectable" data-stripe="solid"><span class="stripe-preview solid"></span>Solid</button>
         </div>
-
         <label class="field-label">Position</label>
-        <div class="chips" id="iconPosChips">
-          <button class="chip deselectable" data-ipos="tl">Top-L</button>
-          <button class="chip deselectable active" data-ipos="tr">Top-R</button>
-          <button class="chip deselectable" data-ipos="tc">Top-C</button>
-          <button class="chip deselectable" data-ipos="bl">Bot-L</button>
-          <button class="chip deselectable active" data-ipos="br">Bot-R</button>
-          <button class="chip deselectable" data-ipos="bc">Bot-C</button>
-          <button class="chip deselectable" data-ipos="cc">Center</button>
+        <div class="chips" id="stripePos">
+          <button class="chip deselectable" data-spos="top">Top</button>
+          <button class="chip active" data-spos="bottom">Bottom</button>
+          <button class="chip deselectable" data-spos="left">Left</button>
+          <button class="chip deselectable" data-spos="right">Right</button>
         </div>
 
-        <label class="field-label">Size <span class="slider-val" id="iconSizeVal" style="float:right">80</span></label>
-        <div class="slider-row">
-          <input type="range" id="iconSizeRange" min="40" max="180" value="80" step="4">
+        <div id="rainbowColorBox">
+          <label class="field-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Rainbow colors <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— tap to toggle (min 2)</small></span>
+            <button type="button" id="rainbowReset" class="mini-btn" title="Reset to all 6 brand colors">Reset</button>
+          </label>
+          <div class="rainbow-picker" id="rainbowPicker"></div>
+          <div class="rainbow-preview" id="rainbowPreview"></div>
         </div>
-      </div>
-    </div>
 
-    <div class="section" id="sec11">
-      <div class="section-head">
-        <div class="section-num">11</div>
-        <div class="section-title">Polish</div>
-      </div>
-      <div class="section-body">
-        <div class="toggle-row">
-          <label for="tg-eyebrow">Show eyebrow pill</label>
-          <div class="switch on" id="tg-eyebrow" data-toggle="showEyebrow"></div>
-        </div>
-        <div class="toggle-row">
-          <label for="tg-subline">Show subline</label>
-          <div class="switch on" id="tg-subline" data-toggle="showSubline"></div>
-        </div>
-        <div class="toggle-row">
-          <label for="tg-cta">Show CTA</label>
-          <div class="switch on" id="tg-cta" data-toggle="showCTA"></div>
+        <div id="solidStripeColorBox" style="display:none">
+          <label class="field-label">Stripe color <small style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— pick one brand color</small></label>
+          <div class="swatch-row" id="stripeColorPicker"></div>
         </div>
       </div>
     </div>
@@ -1183,7 +1395,7 @@ function renderHand(key, color){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${h.viewBox}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${p}</svg>`;
 }
 /* Maximum number of hand gesture slots a single post can have. */
-const MAX_HANDS = 3;
+const MAX_HANDS = 2;
 /* Create a new hand slot with sensible defaults. */
 function newHandSlot(key){
   return { key, pos:'br', size:45, rot:0, nudgeX:0, nudgeY:0, flip:false, soft:false, color:null };
@@ -1264,27 +1476,27 @@ function textOn(bg){ return TEXT_ON[bg.toUpperCase()] || {ink:'#09090F',accent:'
    The first entry in each `text` array is the default `palette.ink` and is chosen
    to meet strict AA 4.5:1 wherever possible. Ordered highest-contrast first. */
 const HARMONY = {
-  /* Core */
-  '#ED3668': { text:['#09090F','#1D1D26','#FFFFFF','#FDF8F6'],                accent:['#09090F','#FFFFFF','#1D1D26','#FDF8F6'] },
-  '#6667AE': { text:['#FFFFFF','#FDF8F6','#09090F','#FDCC08'],                accent:['#FFFFFF','#FDCC08','#09090F','#FDF8F6'] },
-  '#44C7F4': { text:['#09090F','#1D1D26'],                                    accent:['#09090F','#1D1D26'] },
-  '#F79839': { text:['#09090F','#1D1D26'],                                    accent:['#09090F','#1D1D26'] },
-  '#48C1C4': { text:['#09090F','#1D1D26'],                                    accent:['#09090F','#1D1D26'] },
-  '#FDCC08': { text:['#09090F','#1D1D26','#6667AE'],                          accent:['#09090F','#6667AE','#1D1D26'] },
-  /* Neutrals */
-  '#09090F': { text:['#FDF8F6','#FFFFFF','#FDCC08','#44C7F4','#48C1C4','#F79839','#ED3668'], accent:['#FDCC08','#ED3668','#44C7F4','#48C1C4','#F79839','#FDF8F6'] },
-  '#1D1D26': { text:['#FDF8F6','#FFFFFF','#FDCC08','#44C7F4','#48C1C4','#F79839','#ED3668'], accent:['#FDCC08','#ED3668','#44C7F4','#48C1C4','#F79839'] },
-  '#FDF8F6': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#ED3668','#6667AE'] },
-  '#FFFFFF': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#ED3668','#6667AE'] },
-  '#A1A1AA': { text:['#09090F','#1D1D26'],                                    accent:['#09090F','#1D1D26'] },
-  '#71717A': { text:['#FFFFFF','#FDF8F6'],                                    accent:['#FFFFFF','#FDCC08','#FDF8F6'] },
-  /* Light tints — pair with their own family + dark */
-  '#FADDE6': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#ED3668','#6667AE'] },
-  '#E0E0F0': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#6667AE','#ED3668'] },
-  '#D6F1FC': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#6667AE','#ED3668'] },
-  '#FCE4CF': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#6667AE','#ED3668'] },
-  '#DCF1F2': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#6667AE','#ED3668'] },
-  '#FFF1B8': { text:['#09090F','#1D1D26','#6667AE','#ED3668'],                accent:['#09090F','#6667AE','#ED3668'] },
+  /* Core — brand colors lead; black demoted to secondary (never index 0) */
+  '#ED3668': { text:['#FFFFFF','#FDF8F6','#FDCC08','#1D1D26','#09090F'],                accent:['#FFFFFF','#FDCC08','#FDF8F6','#1D1D26','#09090F'] },
+  '#6667AE': { text:['#FFFFFF','#FDF8F6','#FDCC08','#1D1D26','#09090F'],                accent:['#FDCC08','#FFFFFF','#ED3668','#FDF8F6','#1D1D26','#09090F'] },
+  '#44C7F4': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#F79839': { text:['#6667AE','#1D1D26','#09090F'],                                    accent:['#6667AE','#FFFFFF','#1D1D26','#09090F'] },
+  '#48C1C4': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#FDCC08': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  /* Neutrals — brand colors lead on dark bgs; brand colors lead on light bgs */
+  '#09090F': { text:['#FDCC08','#44C7F4','#48C1C4','#F79839','#ED3668','#FDF8F6','#FFFFFF'], accent:['#FDCC08','#ED3668','#44C7F4','#48C1C4','#F79839','#FDF8F6'] },
+  '#1D1D26': { text:['#FDCC08','#44C7F4','#48C1C4','#F79839','#ED3668','#FDF8F6','#FFFFFF'], accent:['#FDCC08','#ED3668','#44C7F4','#48C1C4','#F79839'] },
+  '#FDF8F6': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#FFFFFF': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#A1A1AA': { text:['#1D1D26','#09090F'],                                              accent:['#FFFFFF','#1D1D26','#09090F'] },
+  '#71717A': { text:['#FFFFFF','#FDF8F6','#FDCC08'],                                    accent:['#FDCC08','#FFFFFF','#FDF8F6'] },
+  /* Light tints — pair with their own family first, brand colors next, dark last */
+  '#FADDE6': { text:['#ED3668','#6667AE','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#E0E0F0': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#D6F1FC': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#FCE4CF': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#DCF1F2': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#FFF1B8': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
 };
 const ALL_ACCENT_META = {
   '#ED3668':'Pink','#6667AE':'Purple','#44C7F4':'Sky','#F79839':'Orange',
@@ -1315,9 +1527,15 @@ const VERTICALS = [
 
 /* Layout presets */
 const LAYOUTS = [
-  {k:'bottom',  name:'Bottom',   icon:'<rect x="4" y="20" width="32" height="4" rx="1" fill="#09090F"/><rect x="4" y="15" width="20" height="3" rx="1" fill="#09090F" opacity=".5"/>'},
-  {k:'center',  name:'Center',   icon:'<rect x="8" y="11" width="24" height="4" rx="1" fill="#09090F"/><rect x="12" y="16" width="16" height="3" rx="1" fill="#09090F" opacity=".5"/>'},
-  {k:'top',     name:'Top',      icon:'<rect x="4" y="5" width="32" height="4" rx="1" fill="#09090F"/><rect x="4" y="10" width="20" height="3" rx="1" fill="#09090F" opacity=".5"/>'},
+  {k:'tl', label:'Top Left',     align:'flex-start', x:'flex-start'},
+  {k:'tc', label:'Top Center',   align:'flex-start', x:'center'},
+  {k:'tr', label:'Top Right',    align:'flex-start', x:'flex-end'},
+  {k:'ml', label:'Middle Left',  align:'center',     x:'flex-start'},
+  {k:'mc', label:'Middle',       align:'center',     x:'center'},
+  {k:'mr', label:'Middle Right', align:'center',     x:'flex-end'},
+  {k:'bl', label:'Bottom Left',  align:'flex-end',   x:'flex-start'},
+  {k:'bc', label:'Bottom',       align:'flex-end',   x:'center'},
+  {k:'br', label:'Bottom Right', align:'flex-end',   x:'flex-end'},
 ];
 
 /* =======================================================================
@@ -1335,7 +1553,7 @@ const state = {
   headline:'Roam,{break}sleep & repeat',
   subline:'Hostels + treks across 80+ stops in India.',
   cta:'Book your stop →',
-  layout:'bottom',
+  layout:'bc',
   logoPos:'tr',
   logoLockup:'mark',
   logoVar:'color',
@@ -1346,6 +1564,10 @@ const state = {
   showEyebrow:true,
   showSubline:true,
   showCTA:true,
+  /* Visibility flags wired to the per-section toggle switches */
+  logoOn:true,            // false → render skips logo regardless of logoPos
+  handsOn:true,           // false → render skips all hand layers
+  stripeOn:false,         // false → render skips the stripe (start clean)
   ctaStyle:'yb',    // yb = yellow bg / black ink; by = black bg / yellow ink
   typeScale:1.00,
   leading:1.02,
@@ -1358,7 +1580,13 @@ const state = {
      so it persists through serialize/undo and applies to every script
      accent uniformly. */
   accentSize:1.0,
-  /* Hand swirl decoration — up to MAX_HANDS (3) slots. Each slot is its
+  /* Eyebrow pill scale — 100 = base (~11px). Range 70–180. */
+  eyebrowScale:100,
+  /* Per-element text color overrides. null = "Auto" (uses palette.ink which
+     is harmony.text[0] — strongest readable color on the current bg). */
+  headlineColor:null,
+  sublineColor:null,
+  /* Hand swirl decoration — up to MAX_HANDS (2) slots. Each slot is its
      own placement so users can combine gestures (e.g. Victory in TL +
      Point in BR). All sidebar controls edit the slot at activeHandIdx.
      Slot shape: { key, pos, size, rot, nudgeX, nudgeY, flip, soft, color } */
@@ -1366,11 +1594,25 @@ const state = {
   activeHandIdx:0,
   /* Rainbow stripe color selection — ordered list of 2–7 brand hex colors */
   rainbowColors:['#ED3668','#6667AE','#44C7F4','#48C1C4','#F79839','#FDCC08'],
-  /* Iconography */
-  iconId: null,           // null = no icon
-  iconTreatment: 'yb',   // yb | by | plain
-  iconPos: 'tr',
-  iconSize: 80,
+  /* Kerning controls */
+  titleKerning: -0.020,  // em units, range -0.06 to 0.12
+  accentKerning: 0,       // em units, range -0.06 to 0.12
+  /* Per-word nudges */
+  wordNudges: {},         // {idx: {nudgeX: 0, nudgeY: 0}} for inline-block transform
+  /* Image/Subject property */
+  imgSrc: null,           // data URL
+  showImage: false,
+  imagePos: 'top',        // position in 9-slot layout: top|middle|bottom, left|center|right
+  imageSize: 60,          // width % of canvas
+  /* Eyebrow pill styling */
+  eyebrowColor: null,     // null = use harmony accent, otherwise specific hex
+  eyebrowTextColor: null, // null = follow pill color
+  /* Border styling — off by default; toggle in sec12 turns it on */
+  borderOn: false,
+  borderColor: '#09090F',
+  borderWidth: 16,
+  cornerMode: 'both',     // legacy field; kept so older state shapes still work
+  outerRadius: 0,
 };
 
 /* =======================================================================
@@ -1447,8 +1689,23 @@ function revertVerticalPreset(){
 }
 (function buildVerticals(){
   const root = $('#verticalChips');
-  root.innerHTML = VERTICALS.map(v=>`<button class="chip deselectable" data-v="${v.k}" style="border-color:${v.color}">${v.name}</button>`).join('');
+  root.innerHTML = VERTICALS.map(v=>`<button class="chip deselectable vertical-pill" data-v="${v.k}" style="border-color:${v.color}"><span class="pill-name">${v.name}</span><span class="pill-shuffle" data-shuffle="${v.k}" title="Shuffle this vertical">⟳</span></button>`).join('');
   root.addEventListener('click',e=>{
+    /* Per-pill shuffle: only acts when the clicked pill is already active */
+    const sh = e.target.closest('.pill-shuffle');
+    if(sh){
+      const k = sh.dataset.shuffle;
+      const v = VERTICALS.find(x=>x.k===k); if(!v) return;
+      e.stopPropagation();
+      if(state.vertical !== k){
+        applyVerticalPreset(v);
+        $$('#verticalChips .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===k));
+      }
+      shuffleVerticalVariant(v);
+      render();
+      toast(v.name+' shuffled');
+      return;
+    }
     const t = e.target.closest('.chip'); if(!t) return;
     const v = VERTICALS.find(x=>x.k===t.dataset.v); if(!v) return;
     if(state.vertical === v.k){
@@ -1464,6 +1721,65 @@ function revertVerticalPreset(){
     }
   });
 })();
+
+/* Per-vertical copy variants (3 each — first matches the original).
+   The pill's ⟳ button cycles colors / copy / layout for that vertical only. */
+const VERTICAL_VARIANTS = {
+  leisure: [
+    {eyebrow:'Stay & Unwind',     headline:'Cosy beds,{break}endless chai',     subline:'Hostels in the hills, on the coast, and everywhere in between.',  cta:'Find a stop →'},
+    {eyebrow:'Slow Mornings',     headline:'Soft beds,{break}long mornings',    subline:'Easy stays for travelers who like to take their time.',           cta:'Browse stays →'},
+    {eyebrow:'Hill Air, Soft Beds', headline:'Pause.{break}Stay. Repeat.',      subline:'Restful hostels with great food, great Wi-Fi, great people.',     cta:'See stays →'},
+  ],
+  treks: [
+    {eyebrow:'Trails Calling',    headline:'Boots on,{break}breath in',         subline:'Guided treks across the Himalayas. Safe, small groups, great food.', cta:'Pick a trek →'},
+    {eyebrow:'Above the Clouds',  headline:'Climb high,{break}sleep warm',      subline:'Small-group treks with experienced guides and warm hostels at the end of every day.', cta:'See treks →'},
+    {eyebrow:'Slow & Steady',     headline:'One ridge,{break}then another',     subline:'Multi-day mountain trips for first-timers and old-timers.',        cta:'Plan a trek →'},
+  ],
+  trips: [
+    {eyebrow:'Go & Gather',       headline:'New city,{break}new crew',          subline:'Weekend getaways, long hauls, solo-friendly always.',             cta:'See the trips →'},
+    {eyebrow:'Roads & Roads',     headline:'Pack light,{break}land lighter',    subline:'Curated trips for solo travelers who like company without the noise.', cta:'Browse trips →'},
+    {eyebrow:'New Town, New Friends', headline:'Strangers now,{break}friends later', subline:'Solo-friendly hostels and trips that match your energy.',     cta:'Find a trip →'},
+  ],
+  community: [
+    {eyebrow:'Your Kind of Crew', headline:'Strangers{break}become stops',      subline:'Events, jams, open mics and road stories at every goSTOPS.',      cta:'Join in →'},
+    {eyebrow:'Better Together',   headline:'Your people,{break}probably here',  subline:'Open mics, jam sessions, board games — nights that turn into stories.', cta:'Drop in →'},
+    {eyebrow:'Show Up. Stay Late.', headline:'Friends made{break}at 11pm',      subline:'Common-room culture, every hostel, every night.',                  cta:'See events →'},
+  ],
+  learn: [
+    {eyebrow:'Learn On The Road', headline:'Skills,{break}served with view',    subline:'Workshops, residencies, and hands-on learning in the wild.',      cta:'Browse →'},
+    {eyebrow:'School Without Walls', headline:'Class is{break}wherever you stay', subline:'Photography, ceramics, writing — workshops you can actually attend.', cta:'See classes →'},
+    {eyebrow:'Hands On',          headline:'Pick up{break}something new',       subline:'Short residencies and weekend workshops in pretty places.',       cta:'Find a course →'},
+  ],
+  work: [
+    {eyebrow:'Work. Play. Stay.', headline:'Wi-Fi here,{break}mountains there', subline:'Remote-work ready hostels with strong Wi-Fi and stronger coffee.',cta:'Book a desk →'},
+    {eyebrow:'Office With A View', headline:'Standups,{break}then sunsets',     subline:'Coliving for remote workers — fast Wi-Fi, comfy desks, no decision fatigue.', cta:'Reserve a desk →'},
+    {eyebrow:'Slow Work, Big Views', headline:'Remote work,{break}better backdrops', subline:'Long-stay friendly hostels with reliable Wi-Fi and quiet zones.', cta:'See coliving →'},
+  ],
+};
+let _verticalVariantIdx = {}; // remembers cycle position per vertical
+function shuffleVerticalVariant(v){
+  const variants = VERTICAL_VARIANTS[v.k] || [];
+  if(variants.length){
+    const cur = _verticalVariantIdx[v.k] || 0;
+    const next = (cur + 1) % variants.length;
+    _verticalVariantIdx[v.k] = next;
+    const variant = variants[next];
+    state.eyebrow  = variant.eyebrow;
+    state.headline = variant.headline;
+    state.subline  = variant.subline;
+    state.cta      = variant.cta;
+    state.wordAccents = {}; state.selectedWord = null;
+    if($('#eyebrowInput')) $('#eyebrowInput').value = state.eyebrow;
+    if($('#headlineInput')) $('#headlineInput').value = state.headline;
+    if($('#sublineInput')) $('#sublineInput').value = state.subline;
+    if($('#ctaInput')) $('#ctaInput').value = state.cta;
+  }
+  /* Pick a layout + accent that's coherent (no overlap with hands/logo).
+     preserveBg keeps the vertical's signature color; preserveCopy is moot
+     because we just set the copy above. */
+  _smartCompose({preserveBg:true, preserveCopy:true});
+  if(typeof _syncShuffleUI === 'function') _syncShuffleUI();
+}
 
 /* Swatch rows */
 function buildSwatches(rootSel, arr, key){
@@ -1485,38 +1801,64 @@ buildSwatches('#swNeutral', NEUTRAL, 'bgColor');
 buildSwatches('#swLight', LIGHT, 'bgColor');
 buildSwatches('#swOverlay', [...CORE, ...NEUTRAL.slice(0,4)], 'overlayColor');
 
-/* Accent swatches — rebuilt dynamically from the current bg's harmony list */
+/* Accent swatches — Auto / Best Picks / Other Colors grouping.
+   Best Picks come from the current bg's harmony.accent list (★ = first).
+   Other Colors = remainder of the brand palette. */
+function _buildAutoTile(suggested, secondary, isActive, label){
+  // Pick TWO distinct colors for the gradient. If the harmony's first text
+  // color matches the suggested accent (e.g. on Pink bg both default to white),
+  // fall back to a contrasting brand color so the tile is always visible.
+  const FALLBACK = ['#6667AE','#ED3668','#FDCC08','#1D1D26'];
+  let a = suggested, b = secondary;
+  if(!a) a = '#ED3668';
+  if(!b || a.toUpperCase() === b.toUpperCase()){
+    b = FALLBACK.find(c => c.toUpperCase() !== a.toUpperCase()) || '#1D1D26';
+  }
+  return `<div class="swatch swatch-auto ${isActive?'active':''}" data-v="__auto"
+            style="background:linear-gradient(135deg,${a} 0%,${a} 49%,${b} 51%,${b} 100%);position:relative;"
+            title="${label||'Auto (uses harmony default)'}">
+            <span class="auto-glyph" aria-hidden="true">A</span>
+          </div>`;
+}
 function rebuildAccentSwatches(list){
-  const root = $('#swAccent');
+  const root = $('#swAccent'); if(!root) return;
+  const h = list ? {accent:list, text:harmonyFor(state.bgColor).text} : harmonyFor(state.bgColor);
   const currentColor = state.selectedWord!==null ? (state.wordAccents[state.selectedWord]?.color) : null;
-  root.innerHTML = list.map(v=>{
-    const label = ALL_ACCENT_META[v.toUpperCase()] || v;
-    const lt = ['#FFFFFF','#FDF8F6'].includes(v.toUpperCase());
-    const active = currentColor && currentColor.toUpperCase()===v.toUpperCase() ? 'active' : '';
-    return `<div class="swatch ${lt?'swatch-lt':''} ${active}" data-v="${v}" style="background:${v}" title="${label} — recommended"></div>`;
-  }).join('');
+  const suggested = h.accent[0];
+  const secondary = h.accent[1] || h.text[0];
+  const harmonyItems = h.accent.map(v => ALL_BRAND_PALETTE.find(c => c.v.toUpperCase()===v.toUpperCase()) || {v, k:v});
+  const harmonySet = new Set(h.accent.map(v=>v.toUpperCase()));
+  const others = ALL_BRAND_PALETTE.filter(c => !harmonySet.has(c.v.toUpperCase()));
+  const autoTile = _buildAutoTile(suggested, secondary, currentColor===null||currentColor===undefined, 'Auto (uses harmony default)');
+  root.innerHTML =
+    `<div class="swatch-group"><small>Auto</small><div class="swatch-row">${autoTile}</div></div>` +
+    _swatchGroup('Best Picks', harmonyItems, currentColor, suggested) +
+    _swatchGroup('Other Colors', others, currentColor, null);
 }
 $('#swAccent').addEventListener('click',e=>{
   const t = e.target.closest('.swatch'); if(!t) return;
   if(state.selectedWord === null) return;
-  const entry = state.wordAccents[state.selectedWord] || {style:'color',color:t.dataset.v};
-  entry.color = t.dataset.v;
-  if(entry.style === 'normal') entry.style = 'color';
+  const entry = state.wordAccents[state.selectedWord] || {style:'color',color:null};
+  if(t.dataset.v === '__auto'){
+    entry.color = null;
+  } else {
+    entry.color = t.dataset.v;
+    if(entry.style === 'normal') entry.style = 'color';
+  }
   state.wordAccents[state.selectedWord] = entry;
   $$('#swAccent .swatch').forEach(s=>s.classList.toggle('active',s===t));
   render();
 });
-rebuildAccentSwatches(harmonyFor(state.bgColor).accent);
 
 /* BG tabs */
 function switchBgTab(mode){
   state.bgMode = mode;
-  $$('#sec3 .tab').forEach(t=>t.classList.toggle('active',t.dataset.bg===mode));
+  $$('#sec4 .tab').forEach(t=>t.classList.toggle('active',t.dataset.bg===mode));
   $('#bgSolid').style.display = mode==='solid'?'':'none';
   $('#bgLight').style.display = mode==='light'?'':'none';
   $('#bgImage').style.display = mode==='image'?'':'none';
 }
-$$('#sec3 .tab').forEach(t=>t.addEventListener('click',()=>{switchBgTab(t.dataset.bg);render();}));
+$$('#sec4 .tab').forEach(t=>t.addEventListener('click',()=>{switchBgTab(t.dataset.bg);render();}));
 
 /* Image upload */
 $('#imgUpload').addEventListener('click',()=>$('#imgInput').click());
@@ -1593,31 +1935,94 @@ $('#headlineFine').addEventListener('input',e=>{
   $('#headlineFineVal').textContent = (state.headlineFine>=0?'+':'')+state.headlineFine;
   render();
 });
+$('#titleKerningRange').addEventListener('input',e=>{
+  state.titleKerning = +e.target.value/1000;
+  $('#titleKerningVal').textContent = state.titleKerning.toFixed(3)+'em';
+  render();
+});
+$('#accentKerningRange').addEventListener('input',e=>{
+  state.accentKerning = +e.target.value/1000;
+  $('#accentKerningVal').textContent = state.accentKerning.toFixed(3)+'em';
+  render();
+});
 
-/* Layout grid — tap active ✕ reverts to default 'bottom' */
-(function buildLayouts(){
-  const root = $('#layoutGrid');
-  root.innerHTML = LAYOUTS.map(l=>{
-    const deselectable = l.k !== 'bottom' ? 'deselectable' : '';
-    return `<div class="layout-tile ${deselectable} ${l.k===state.layout?'active':''}" data-l="${l.k}">
-      <svg viewBox="0 0 40 28">${l.icon}</svg>
-      <span>${l.name}</span>
-    </div>`;
+function syncNudgeFields(){
+  const i = state.selectedWord;
+  const f = $('#accentNudgeFields');
+  if(i==null){ f.style.display='none'; return; }
+  f.style.display='block';
+  const acc = state.wordAccents[i] || {};
+  $('#accentNudgeXRange').value = acc.nudgeX||0;
+  $('#accentNudgeYRange').value = acc.nudgeY||0;
+  $('#accentNudgeXVal').textContent = (acc.nudgeX||0)+'px';
+  $('#accentNudgeYVal').textContent = (acc.nudgeY||0)+'px';
+}
+$('#accentNudgeXRange').addEventListener('input',e=>{
+  if(state.selectedWord==null) return;
+  const acc = state.wordAccents[state.selectedWord] = state.wordAccents[state.selectedWord] || {};
+  acc.nudgeX = +e.target.value;
+  $('#accentNudgeXVal').textContent = acc.nudgeX+'px';
+  render();
+});
+$('#accentNudgeYRange').addEventListener('input',e=>{
+  if(state.selectedWord==null) return;
+  const acc = state.wordAccents[state.selectedWord] = state.wordAccents[state.selectedWord] || {};
+  acc.nudgeY = +e.target.value;
+  $('#accentNudgeYVal').textContent = acc.nudgeY+'px';
+  render();
+});
+
+/* Layout grid — each chip shows a mini skeleton preview of where text sits.
+   Tap active chip ✕ does nothing here (no toggle-off). Use $$ for the
+   NodeList → array conversion (must use $$ not $). */
+function _layoutSkeleton(L){
+  // Map flex align → y position; flex justify-x → x position (in 0–1 range)
+  const yMap = {'flex-start':0.18, 'center':0.50, 'flex-end':0.82};
+  const xMap = {'flex-start':0.16, 'center':0.50, 'flex-end':0.84};
+  const cy = yMap[L.align] || 0.5;
+  const cx = xMap[L.x] || 0.5;
+  const W = 28, H = 36;
+  // 3 stacked bars (eyebrow, headline-1, headline-2) — anchored at (cx,cy)
+  const x = cx * W;
+  const y = cy * H;
+  const anchor = L.x === 'flex-end' ? 'end' : (L.x === 'center' ? 'middle' : 'start');
+  const dx = anchor === 'end' ? -1 : (anchor === 'middle' ? -0.5 : 0);
+  // Bar widths: small eyebrow, big headline, medium subline
+  const bars = [
+    {w:8, h:1.6, dy:-5},
+    {w:14, h:2.4, dy:-1.2},
+    {w:11, h:1.6, dy:2.2},
+  ];
+  const rects = bars.map(b => {
+    const bx = x + dx * b.w;
+    const by = y + b.dy;
+    return `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${b.w}" height="${b.h}" rx="0.6" fill="currentColor" opacity="${b.h>2?1:.6}"/>`;
   }).join('');
+  return `<svg class="layout-skel" viewBox="0 0 ${W} ${H}" width="22" height="28" aria-hidden="true">
+    <rect x="1" y="1" width="${W-2}" height="${H-2}" rx="2.4" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+    ${rects}
+  </svg>`;
+}
+(function buildLayouts(){
+  const root = $('#layoutGrid'); if(!root) return;
+  root.innerHTML = LAYOUTS.map(l=>`
+    <button class="chip layout-chip ${l.k===state.layout?'active':''}" data-l="${l.k}" title="${l.label}">
+      ${_layoutSkeleton(l)}
+      <span class="layout-chip-label">${l.label}</span>
+    </button>`).join('');
   root.addEventListener('click',e=>{
-    const t = e.target.closest('.layout-tile'); if(!t) return;
-    const val = t.dataset.l;
-    state.layout = (state.layout === val && t.classList.contains('deselectable')) ? 'bottom' : val;
-    $$('#layoutGrid .layout-tile').forEach(x=>x.classList.toggle('active',x.dataset.l===state.layout));
+    const t = e.target.closest('.chip'); if(!t) return;
+    state.layout = t.dataset.l;
+    $$('#layoutGrid .chip').forEach(c=>c.classList.toggle('active',c===t));
     render();
   });
 })();
 
-/* Logo controls — tap active position ✕ hides the logo (sets to 'none') */
+/* Logo placement — visibility is controlled by the section head toggle.
+   Tapping a position chip just sets the position (no deselect-to-none). */
 $('#logoPos').addEventListener('click',e=>{
   const t = e.target.closest('.chip'); if(!t) return;
-  const val = t.dataset.pos;
-  state.logoPos = (state.logoPos === val && t.classList.contains('deselectable')) ? 'none' : val;
+  state.logoPos = t.dataset.pos;
   $$('#logoPos .chip').forEach(c=>c.classList.toggle('active',c.dataset.pos===state.logoPos));
   render();
 });
@@ -1639,11 +2044,11 @@ $('#logoSize').addEventListener('input',e=>{
   render();
 });
 
-/* Stripe — tap active ✕ removes the stripe (sets to 'none') */
-$$('#sec9 .stripe-option').forEach(o=>o.addEventListener('click',()=>{
-  const val = o.dataset.stripe;
-  state.stripe = (state.stripe === val && o.classList.contains('deselectable')) ? 'none' : val;
-  $$('#sec9 .stripe-option').forEach(x=>x.classList.toggle('active',x.dataset.stripe===state.stripe));
+/* Stripe style — visibility is controlled by the section head toggle.
+   Tapping a style chip just sets the style. (Stripe section moved to sec10.) */
+$$('#sec10 .stripe-option').forEach(o=>o.addEventListener('click',()=>{
+  state.stripe = o.dataset.stripe;
+  $$('#sec10 .stripe-option').forEach(x=>x.classList.toggle('active',x.dataset.stripe===state.stripe));
   syncStripeColorUI();
   render();
 }));
@@ -2007,8 +2412,10 @@ function rebuildHandSwatches(){
     return `<div class="swatch ${lt?'swatch-lt':''} ${active}" data-v="${v}" title="${title}" style="background:${v}">${badge}</div>`;
   };
 
-  // Auto chip — first swatch in Best Picks. Follows the bg harmony accent.
-  const autoTile = `<div class="swatch swatch-auto ${slot.color===null?'active':''}" data-v="__auto" title="Auto — tracks harmony accent" style="background:linear-gradient(135deg,${accents[0]} 0 50%,${accents[1]||accents[0]} 50% 100%)"></div>`;
+  // Auto chip — uses the unified _buildAutoTile so all Auto tiles look the same
+  const autoTile = (typeof _buildAutoTile === 'function')
+    ? _buildAutoTile(accents[0], accents[1] || harmonyFor(effBg).text[0], slot.color===null, 'Auto — tracks harmony accent')
+    : `<div class="swatch swatch-auto ${slot.color===null?'active':''}" data-v="__auto" title="Auto" style="background:linear-gradient(135deg,${accents[0]} 0 50%,${accents[1]||accents[0]} 50% 100%)"><span class="auto-glyph">A</span></div>`;
 
   // Best Picks = Auto + every harmony accent (dedupe by hex, keep harmony order).
   const bestRow = [autoTile, ...accents.map(tile)].join('');
@@ -2022,11 +2429,11 @@ function rebuildHandSwatches(){
   const bgName = ALL_ACCENT_META[(effBg||'').toUpperCase()] || effBg;
   root.innerHTML = `
     <div class="swatch-group">
-      <div class="swatch-group-label"><span>Best Picks</span><small>readable on ${bgName}</small></div>
+      <div class="swatch-group-label"><span>Best Picks</span><small>Looks best on ${bgName}</small></div>
       <div class="swatch-row">${bestRow}</div>
     </div>
     ${otherRow ? `<div class="swatch-group">
-      <div class="swatch-group-label"><span>Other Colors</span><small>off-harmony but on-brand</small></div>
+      <div class="swatch-group-label"><span>Other Colors</span><small>brand palette</small></div>
       <div class="swatch-row">${otherRow}</div>
     </div>` : ''}
   `;
@@ -2042,11 +2449,185 @@ rebuildHandSwatches();
 /* Initial slot-row paint + controls-disabled state. */
 syncAllHandUI();
 
-/* Toggles */
+/* =======================================================================
+   EYEBROW PILL + EYEBROW TEXT PICKERS
+   Reuses harmonyFor() for ★-suggested badges. Auto tile = null state.
+   ======================================================================= */
+const ALL_BRAND_PALETTE = [...CORE, ...NEUTRAL];
+function _eyebrowEffectiveBg(){
+  return state.bgMode==='image' && state.bgImage ? state.overlayColor : state.bgColor;
+}
+function _swatchTile(c, selectedVal, suggestedVal, title){
+  const isSugg = suggestedVal && c.v && c.v.toUpperCase() === suggestedVal.toUpperCase();
+  const isActive = selectedVal && c.v && selectedVal.toUpperCase() === c.v.toUpperCase();
+  const lt = ['#FFFFFF','#FDF8F6'].includes((c.v||'').toUpperCase()) ? 'swatch-lt' : '';
+  return `<div class="swatch ${lt} ${isActive?'active':''} ${isSugg?'suggested':''}" data-v="${c.v}" style="background:${c.v}" title="${title||c.k||''}"></div>`;
+}
+function _swatchGroup(label, items, selectedVal, suggestedVal){
+  return `<div class="swatch-group"><small>${label}</small><div class="swatch-row">${
+    items.map(c => _swatchTile(c, selectedVal, suggestedVal)).join('')
+  }</div></div>`;
+}
+/* =======================================================================
+   EYEBROW PILL EDITOR
+   Pill color + pill text color, both with the unified Auto-tile.
+   Pill size is controlled separately by the #eyebrowScale slider.
+   ======================================================================= */
+function _eyebrowEffectiveBgInner(){
+  return state.bgMode==='image' && state.bgImage ? state.overlayColor : state.bgColor;
+}
+function rebuildEyebrowSwatches(){
+  const root = $('#swEyebrow'); if(!root) return;
+  const h = harmonyFor(_eyebrowEffectiveBgInner());
+  const suggested = h.accent[0];
+  const secondary = h.accent[1] || h.text[0];
+  const harmonyItems = h.accent.map(v => ALL_BRAND_PALETTE.find(c => c.v.toUpperCase()===v.toUpperCase()) || {v, k:v});
+  const harmonySet = new Set(h.accent.map(v=>v.toUpperCase()));
+  const others = ALL_BRAND_PALETTE.filter(c => !harmonySet.has(c.v.toUpperCase()));
+  const autoTile = _buildAutoTile(suggested, secondary, state.eyebrowColor===null, 'Auto — tracks harmony accent');
+  const bgName = ALL_ACCENT_META[(_eyebrowEffectiveBgInner()||'').toUpperCase()] || _eyebrowEffectiveBgInner();
+  root.innerHTML =
+    `<div class="swatch-group"><small>Auto</small><div class="swatch-row">${autoTile}</div></div>` +
+    `<div class="swatch-group"><small>Best Picks <span style="color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0">— Looks best on ${bgName}</span></small><div class="swatch-row">${
+      harmonyItems.map(c => _swatchTile(c, state.eyebrowColor, suggested)).join('')
+    }</div></div>` +
+    `<div class="swatch-group"><small>Other Colors</small><div class="swatch-row">${
+      others.map(c => _swatchTile(c, state.eyebrowColor, null)).join('')
+    }</div></div>`;
+}
+function rebuildEyebrowTextSwatches(){
+  const root = $('#swEyebrowText'); if(!root) return;
+  const h = harmonyFor(_eyebrowEffectiveBgInner());
+  const eyebrowC = state.eyebrowColor || h.accent[0];
+  const secondary = h.text[0];
+  const harmonyItems = h.accent.map(v => ALL_BRAND_PALETTE.find(c => c.v.toUpperCase()===v.toUpperCase()) || {v, k:v});
+  const harmonySet = new Set(h.accent.map(v=>v.toUpperCase()));
+  const others = ALL_BRAND_PALETTE.filter(c => !harmonySet.has(c.v.toUpperCase()));
+  const autoTile = _buildAutoTile(eyebrowC, secondary, state.eyebrowTextColor===null, 'Auto — matches pill');
+  root.innerHTML =
+    `<div class="swatch-group"><small>Auto <span style="color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0">— matches pill</span></small><div class="swatch-row">${autoTile}</div></div>` +
+    `<div class="swatch-group"><small>Best Picks</small><div class="swatch-row">${
+      harmonyItems.map(c => _swatchTile(c, state.eyebrowTextColor, eyebrowC)).join('')
+    }</div></div>` +
+    `<div class="swatch-group"><small>Other Colors</small><div class="swatch-row">${
+      others.map(c => _swatchTile(c, state.eyebrowTextColor, null)).join('')
+    }</div></div>`;
+}
+$('#swEyebrow').addEventListener('click', e => {
+  const t = e.target.closest('.swatch'); if(!t) return;
+  state.eyebrowColor = t.dataset.v === '__auto' ? null : t.dataset.v;
+  render();
+});
+$('#swEyebrowText').addEventListener('click', e => {
+  const t = e.target.closest('.swatch'); if(!t) return;
+  state.eyebrowTextColor = t.dataset.v === '__auto' ? null : t.dataset.v;
+  render();
+});
+$('#eyebrowScale').addEventListener('input', e => {
+  state.eyebrowScale = +e.target.value;
+  $('#eyebrowScaleVal').textContent = state.eyebrowScale + '%';
+  render();
+});
+rebuildEyebrowSwatches();
+rebuildEyebrowTextSwatches();
+
+/* =======================================================================
+   HEADLINE + SUBLINE COLOR PICKERS
+   Same Auto / Best Picks / Other Colors pattern as the Eyebrow pickers.
+   Best Picks come from harmony.text (every readable text color for the bg);
+   the harmony's first text color (palette.ink) is the suggested ★.
+   ======================================================================= */
+function _buildTextSwatches(rootSel, currentVal, suggestedLabel){
+  const root = $(rootSel); if(!root) return;
+  const h = harmonyFor(_eyebrowEffectiveBgInner());
+  const suggested = h.text[0];
+  const secondary = h.text[1] || h.accent[0];
+  const textItems = h.text.map(v => ALL_BRAND_PALETTE.find(c => c.v.toUpperCase()===v.toUpperCase()) || {v, k:v});
+  const textSet = new Set(h.text.map(v=>v.toUpperCase()));
+  const others = ALL_BRAND_PALETTE.filter(c => !textSet.has(c.v.toUpperCase()));
+  const autoTile = _buildAutoTile(suggested, secondary, currentVal===null||currentVal===undefined, suggestedLabel || 'Auto — tracks readable text color');
+  const bgName = ALL_ACCENT_META[(_eyebrowEffectiveBgInner()||'').toUpperCase()] || _eyebrowEffectiveBgInner();
+  root.innerHTML =
+    `<div class="swatch-group"><small>Auto</small><div class="swatch-row">${autoTile}</div></div>` +
+    `<div class="swatch-group"><small>Best Picks <span style="color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0">— Looks best on ${bgName}</span></small><div class="swatch-row">${
+      textItems.map(c => _swatchTile(c, currentVal, suggested)).join('')
+    }</div></div>` +
+    `<div class="swatch-group"><small>Other Colors</small><div class="swatch-row">${
+      others.map(c => _swatchTile(c, currentVal, null)).join('')
+    }</div></div>`;
+}
+function rebuildHeadlineSwatches(){ _buildTextSwatches('#swHeadline', state.headlineColor, 'Auto — tracks headline default'); }
+function rebuildSublineSwatches(){  _buildTextSwatches('#swSubline',  state.sublineColor,  'Auto — tracks subline default'); }
+$('#swHeadline').addEventListener('click', e => {
+  const t = e.target.closest('.swatch'); if(!t) return;
+  state.headlineColor = t.dataset.v === '__auto' ? null : t.dataset.v;
+  render();
+});
+$('#swSubline').addEventListener('click', e => {
+  const t = e.target.closest('.swatch'); if(!t) return;
+  state.sublineColor = t.dataset.v === '__auto' ? null : t.dataset.v;
+  render();
+});
+rebuildHeadlineSwatches();
+rebuildSublineSwatches();
+
+/* =======================================================================
+   BORDER SECTION
+   "Both sides" is the only corner mode now (real CSS border + outside
+   corner-fill via canvasWrap bg). The "Inner only" cutout was removed.
+   ======================================================================= */
+buildSwatches('#swBorder', [...CORE, ...NEUTRAL], 'borderColor');
+$('#borderWidthRange').addEventListener('input', e => {
+  state.borderWidth = +e.target.value;
+  $('#borderWidthVal').textContent = state.borderWidth + 'px';
+  render();
+});
+$('#outerRadiusRange').addEventListener('input', e => {
+  state.outerRadius = +e.target.value;
+  $('#outerRadiusVal').textContent = state.outerRadius + 'px';
+  render();
+});
+
+/* Section heads are static (no collapse) — visibility is controlled by the
+   per-section toggle switches embedded in each head where applicable. */
+
+/* =======================================================================
+   MOBILE DRAWER TOGGLE
+   On screens < 1024px the sidebar becomes a bottom drawer.
+   ======================================================================= */
+(function setupMobileDrawer(){
+  const sidebar = document.querySelector('.sidebar.right') || document.querySelector('aside.sidebar') || document.querySelector('aside');
+  if(!sidebar) return;
+  if(sidebar.querySelector('.drawer-toggle')) return;
+  const btn = document.createElement('button');
+  btn.className = 'drawer-toggle';
+  btn.type = 'button';
+  btn.style.cssText = 'position:sticky;top:0;width:100%;height:56px;background:#fff;color:#09090F;border:none;font-weight:700;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,0.08);z-index:5;display:none;letter-spacing:0.04em;text-transform:uppercase;';
+  btn.textContent = 'Edit ▲';
+  btn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    btn.textContent = sidebar.classList.contains('open') ? 'Done ▼' : 'Edit ▲';
+  });
+  sidebar.insertBefore(btn, sidebar.firstChild);
+  /* Show only on small screens */
+  function syncDrawerVisibility(){
+    btn.style.display = window.matchMedia('(max-width: 1023px)').matches ? 'block' : 'none';
+    if(!window.matchMedia('(max-width: 1023px)').matches){
+      sidebar.classList.remove('open');
+      btn.textContent = 'Edit ▲';
+    }
+  }
+  syncDrawerVisibility();
+  window.addEventListener('resize', syncDrawerVisibility);
+})();
+
+/* Toggles
+   Section visibility toggles (logoOn, handsOn, stripeOn, borderOn,
+   showEyebrow, showSubline, showCTA) all live on `state` and the render
+   function honors them. handFlip/handSoft live inside the active hand slot. */
 $$('.switch[data-toggle]').forEach(sw=>{
   sw.addEventListener('click',()=>{
     const key = sw.dataset.toggle;
-    // handFlip / handSoft live inside the ACTIVE hand slot, not on state.
     if(key === 'handFlip' || key === 'handSoft'){
       const slot = activeHand(); if(!slot) return;
       const field = key === 'handFlip' ? 'flip' : 'soft';
@@ -2055,10 +2636,23 @@ $$('.switch[data-toggle]').forEach(sw=>{
     } else {
       state[key] = !state[key];
       sw.classList.toggle('on', state[key]);
+      // Mark the parent section visually-hidden so users see the body dim.
+      const sec = sw.closest('.section, .subsection');
+      if(sec) sec.classList.toggle('is-hidden', !state[key]);
     }
     render();
   });
 });
+/* Initialize visual state of every toggle from current state */
+function _syncToggleVisualState(){
+  $$('.switch[data-toggle]').forEach(sw => {
+    const key = sw.dataset.toggle;
+    if(key === 'handFlip' || key === 'handSoft') return;
+    sw.classList.toggle('on', !!state[key]);
+    const sec = sw.closest('.section, .subsection');
+    if(sec) sec.classList.toggle('is-hidden', !state[key]);
+  });
+}
 
 /* Accent controls */
 $('#accentControls .chips').addEventListener('click',e=>{
@@ -2159,102 +2753,171 @@ $('#btnReset').addEventListener('click',()=>{
   toast('Reset complete');
 });
 
-$('#btnShuffle').addEventListener('click',()=>{
-  const layouts = LAYOUTS.map(l=>l.k);
-  const positions = ['tl','tr','tc','bl','br','bc'];
-  const stripes = ['rainbow','tri','solid','none'];
-  const stripePosns = ['top','bottom','left','right'];
-  const colors = [...CORE, NEUTRAL[0], NEUTRAL[2]];
-  state.layout = layouts[Math.floor(Math.random()*layouts.length)];
-  state.logoPos = positions[Math.floor(Math.random()*positions.length)];
-  state.stripe = stripes[Math.floor(Math.random()*stripes.length)];
-  state.stripePos = stripePosns[Math.floor(Math.random()*stripePosns.length)];
-  if(state.bgMode==='solid'){
-    state.bgColor = colors[Math.floor(Math.random()*colors.length)].v;
-  }
+/* =======================================================================
+   SMART COMPOSE
+   Generates a coherent, on-brand composition. The flow:
+     1. BG → defines the HARMONY (text, accent palettes for the bg)
+     2. From harmony.accent we pick a HERO accent + a SUPPORT accent
+     3. Layout → reserves a quadrant; hands & logo go in OTHER quadrants
+     4. Hero accent goes on word-accent + (one) hand
+     5. Support accent goes on the second hand or the stripe
+     6. Border color (when borderOn) auto-picks from harmony.text[0]
+     7. CTA style flips to the highest-contrast option
+   No two visible elements share the SAME hue. Everything contrasts the bg.
+   opts.preserveBg     — keep state.bgColor untouched (used by per-pill shuffle)
+   opts.preserveCopy   — keep eyebrow/headline/subline/cta untouched
+   ======================================================================= */
+function _smartCompose(opts){
+  opts = opts || {};
+  const _pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const _norm = c => (c||'').toUpperCase();
 
-  /* ---- Color combinations: everything flows from the bg's HARMONY ---- */
+  /* --- 1. Background ------------------------------------------------- */
+  if(!opts.preserveBg && state.bgMode === 'solid'){
+    // Bias toward CORE (vibrant) over neutrals — neutrals only ~25% of the time
+    const pool = Math.random() < 0.75 ? CORE : [...CORE, NEUTRAL[0], NEUTRAL[2]];
+    state.bgColor = _pick(pool).v;
+  }
+  const bgUp = _norm(state.bgColor);
   const harmony = harmonyFor(state.bgColor);
-  const harmonyAccents = harmony.accent.slice(); // readable accents for this bg
+  const harmonyAccents = harmony.accent.slice();
 
-  // Solid stripe always draws from the bg's harmony so it stays readable.
-  if(state.stripe === 'solid'){
-    state.stripeColor = harmonyAccents[Math.floor(Math.random()*harmonyAccents.length)] || '#ED3668';
-  }
+  /* --- 2. Hero + support accents ------------------------------------
+     Hero = the strongest harmony accent (filtered to never match bg).
+     Support = a different harmony accent so the two never collide. */
+  const accentPool = harmonyAccents.filter(c => _norm(c) !== bgUp);
+  const heroAccent = accentPool[0] || '#ED3668';
+  const supportAccent = accentPool.find(c => _norm(c) !== _norm(heroAccent))
+                     || (heroAccent === '#FFFFFF' ? '#FDCC08' : '#FFFFFF');
 
-  // CTA pill — avoid making the pill blend into the canvas bg.
-  const bgUp = (state.bgColor||'').toUpperCase();
-  if(bgUp === '#FDCC08')      state.ctaStyle = 'by';      // yellow canvas → dark pill
-  else if(bgUp === '#09090F') state.ctaStyle = 'yb';      // dark canvas   → yellow pill
-  else                        state.ctaStyle = Math.random() < 0.5 ? 'yb' : 'by';
+  /* --- 3. Layout ----------------------------------------------------- */
+  state.layout = _pick(LAYOUTS.map(l=>l.k));
+  const L = LAYOUTS.find(l=>l.k===state.layout);
 
-  // Word accents — always from the harmony so they contrast against the bg.
-  const words = currentWords();
-  state.wordAccents = {};
-  if(words.length){
-    const n = Math.min(words.length, 1 + Math.floor(Math.random()*2));
-    const chosen = new Set();
-    while(chosen.size<n) chosen.add(Math.floor(Math.random()*words.length));
-    const style = Math.random()<0.5?'script':'color';
-    // Bias toward the top 3 harmony accents (strongest contrast) and avoid
-    // reusing the same hue as the stripe when both are solid-ish pieces.
-    const pool = harmonyAccents.slice(0, Math.min(3, harmonyAccents.length))
-      .filter(c => state.stripe !== 'solid' || c.toUpperCase() !== (state.stripeColor||'').toUpperCase());
-    const src = pool.length ? pool : harmonyAccents;
-    const ac = src[Math.floor(Math.random()*src.length)];
-    for(const i of chosen) state.wordAccents[i] = {style, color:ac};
-  }
+  /* Reserve a "no fly" set for collision avoidance. Corner layouts block
+     their corner + adjacent edge midpoints; edge layouts block themselves. */
+  const layoutZones = new Set([L.k]);
+  const adjacent = {tl:['tc','ml'], tr:['tc','mr'], bl:['bc','ml'], br:['bc','mr']};
+  if(adjacent[L.k]) adjacent[L.k].forEach(z => layoutZones.add(z));
 
-  /* ---- Hand gestures: always enter from a corner, pointing inward ----
-     Heuristic: left-side anchors (TL/BL) get horizontally flipped so the
-     hand swirl reads into the canvas; right-side anchors (TR/BR) stay at
-     their natural orientation. We also lock rotation + nudge to zero so
-     the composition stays pinned to the corner (hand can't fly off). */
-  const handKeys = Object.keys(HANDS);
-  const handPosns = ['tl','tr','bl','br'];
-  const cornerFlip = { tl:true, bl:true, tr:false, br:false };
+  /* --- 4. Hands (max MAX_HANDS, only at unused corners) ------------- */
+  const handCorners = ['tl','tr','bl','br'].filter(c => !layoutZones.has(c));
   state.hands = [];
   state.activeHandIdx = 0;
-  if(Math.random() < 0.4){
-    const count = 1 + Math.floor(Math.random() * Math.min(MAX_HANDS, handKeys.length));
-    const pool = [...handKeys].sort(()=>Math.random()-0.5).slice(0, count);
-    const usedPosns = new Set();
-    // Keep hand colors harmonious AND avoid collision with the stripe color
-    // (picking e.g. pink hand on a pink stripe reads as one blob).
-    const stripeUp = (state.stripe === 'solid' ? (state.stripeColor||'') : '').toUpperCase();
-    const handColorPool = harmonyAccents
-      .filter(c => c.toUpperCase() !== bgUp)              // not the same as bg
-      .filter(c => !stripeUp || c.toUpperCase() !== stripeUp); // not same as solid stripe
-    pool.forEach(key=>{
+  const wantHands = Math.random() < 0.55 && handCorners.length > 0;
+  if(wantHands){
+    const count = Math.min(MAX_HANDS, handCorners.length, 1 + (Math.random() < 0.35 ? 1 : 0));
+    const handKeys = Object.keys(HANDS);
+    const cornerFlip = { tl:true, bl:true, tr:false, br:false };
+    const usedCorners = [];
+    const pickedKeys = [...handKeys].sort(()=>Math.random()-0.5).slice(0, count);
+    // Hand colors: 1st hand uses HERO, 2nd hand uses SUPPORT (so the two never clash)
+    const handColors = [heroAccent, supportAccent];
+    pickedKeys.forEach((key, i)=>{
+      const open = handCorners.filter(c => !usedCorners.includes(c));
+      if(!open.length) return;
+      const pos = _pick(open);
+      usedCorners.push(pos);
       const slot = newHandSlot(key);
-      // Pick an unused corner so multi-hand compositions don't stack.
-      const open = handPosns.filter(p=>!usedPosns.has(p));
-      slot.pos = (open.length ? open : handPosns)[Math.floor(Math.random()*(open.length||handPosns.length))];
-      usedPosns.add(slot.pos);
-      slot.size = 35 + Math.floor(Math.random()*30); // 35–64%
-      slot.flip = cornerFlip[slot.pos];              // always point inward
+      slot.pos = pos;
+      slot.size = 32 + Math.floor(Math.random()*16); // 32–47%
+      slot.flip = cornerFlip[pos];
       slot.soft = Math.random() < 0.35;
-      slot.rot = 0;                                  // no random rot — stays pointing in
-      slot.nudgeX = 0;                               // pinned to corner
-      slot.nudgeY = 0;
-      // Hand color: prefer harmonious + non-clashing; fall back to harmony[0],
-      // then to null (which renders as harmony accent at render time).
-      const src = handColorPool.length ? handColorPool : harmonyAccents;
-      slot.color = src.length ? src[Math.floor(Math.random()*src.length)] : null;
+      slot.rot = 0;
+      slot.nudgeX = 0; slot.nudgeY = 0;
+      slot.color = handColors[i] || heroAccent;
       state.hands.push(slot);
     });
   }
 
-  // reflect into pickers
-  $$('#layoutGrid .layout-tile').forEach(t=>t.classList.toggle('active',t.dataset.l===state.layout));
+  /* --- 5. Logo position (avoid layout zones AND hand corners) -------- */
+  const logoPositions = ['tl','tr','tc','bl','br','bc'];
+  const handCornerSet = new Set(state.hands.map(h => h.pos));
+  const logoOpen = logoPositions.filter(p => !layoutZones.has(p) && !handCornerSet.has(p));
+  state.logoPos = logoOpen.length ? _pick(logoOpen) : 'tl';
+
+  /* --- 6. Stripe (lower probability when hands present) --------- */
+  const allowStripe = state.hands.length === 0 ? 0.55 : 0.18;
+  if(Math.random() < allowStripe){
+    state.stripe = _pick(['rainbow','tri','solid']);
+    state.stripePos = _pick(['top','bottom','left','right']);
+    if(state.stripe === 'solid'){
+      // Solid stripe must contrast bg AND not duplicate any hand color.
+      const handCols = new Set(state.hands.map(h => _norm(h.color)));
+      const stripePool = accentPool.filter(c => !handCols.has(_norm(c)));
+      // Prefer SUPPORT first (it's already different from hero), otherwise hero.
+      const preferred = !handCols.has(_norm(supportAccent)) ? supportAccent
+                       : (!handCols.has(_norm(heroAccent)) ? heroAccent : null);
+      state.stripeColor = preferred || (stripePool[0] || harmonyAccents[0] || '#ED3668');
+    }
+  } else {
+    state.stripe = 'none';
+  }
+
+  /* --- 7. CTA pill style (highest contrast vs bg) ----------------- */
+  // 'yb' = yellow pill, black ink. 'by' = black pill, yellow ink.
+  // Yellow bg → black pill (by). Black/dark bg → yellow pill (yb).
+  // Light bg → black pill is sharper; vivid bg → yellow pill pops more.
+  if(bgUp === '#FDCC08')                        state.ctaStyle = 'by';
+  else if(['#09090F','#1D1D26'].includes(bgUp)) state.ctaStyle = 'yb';
+  else if(['#FFFFFF','#FDF8F6'].includes(bgUp)) state.ctaStyle = 'by';
+  else                                          state.ctaStyle = 'yb'; // vivid bg → yellow pops
+
+  /* --- 8. Word accents (exactly ONE word, hero accent) -------------
+     Word accent uses HERO so it's the focal element. Avoids stripe/hand clash. */
+  const words = currentWords();
+  state.wordAccents = {};
+  if(words.length){
+    const idx = Math.floor(Math.random()*words.length);
+    const handCols = new Set(state.hands.map(h => _norm(h.color)));
+    const stripeColUp = state.stripe === 'solid' ? _norm(state.stripeColor) : '';
+    // Pick the first accent from {hero, support, ...} that isn't already used.
+    const used = new Set([bgUp, ...handCols, stripeColUp].filter(Boolean));
+    const candidate = accentPool.find(c => !used.has(_norm(c))) || heroAccent;
+    const longestWord = Math.max(...words.map(w => w.length));
+    const style = (longestWord <= 8 && Math.random() < 0.25) ? 'script' : 'color';
+    state.wordAccents[idx] = {style, color:candidate};
+  }
+
+  /* --- 9. Border color: when border is on, harmonize it with the bg.
+     Use harmony.text[0] (highest-contrast text color) so the border feels
+     like a deliberate frame rather than an arbitrary box. */
+  if(state.borderOn){
+    state.borderColor = harmony.text[0] || '#09090F';
+  }
+
+  /* --- 10. Reset extras so leftover slider values + manual color overrides
+     don't poison the new auto-coordinated composition. */
+  state.titleKerning = 0;
+  state.headlineFine = 0;
+  state.accentKerning = 0;
+  state.headlineColor = null;   // back to harmony.text[0]
+  state.sublineColor  = null;
+  state.eyebrowColor  = null;
+  state.eyebrowTextColor = null;
+}
+
+function _syncShuffleUI(){
+  $$('#layoutGrid .chip').forEach(t=>t.classList.toggle('active',t.dataset.l===state.layout));
   $$('#logoPos .chip').forEach(c=>c.classList.toggle('active',c.dataset.pos===state.logoPos));
-  $$('#sec9 .stripe-option').forEach(o=>o.classList.toggle('active',o.dataset.stripe===state.stripe));
+  $$('#sec10 .stripe-option').forEach(o=>o.classList.toggle('active',o.dataset.stripe===state.stripe));
   $$('#stripePos .chip').forEach(c=>c.classList.toggle('active',c.dataset.spos===state.stripePos));
-  $$('#swCore .swatch, #swNeutral .swatch').forEach(s=>s.classList.toggle('active',s.dataset.v===state.bgColor));
+  $$('#swCore .swatch, #swNeutral .swatch, #swLight .swatch').forEach(s=>s.classList.toggle('active',s.dataset.v===state.bgColor));
+  $$('#swBorder .swatch').forEach(s=>s.classList.toggle('active',s.dataset.v===state.borderColor));
   $$('#ctaStyleChips .chip').forEach(c=>c.classList.toggle('active',c.dataset.cta===state.ctaStyle));
   rebuildSolidStripePicker();
   syncStripeColorUI();
   syncAllHandUI();
+  if(typeof rebuildAccentSwatches==='function') rebuildAccentSwatches(harmonyFor(state.bgColor).accent);
+  // reset slider UI for cleared values
+  if($('#headlineFine')){ $('#headlineFine').value = 0; $('#headlineFineVal').textContent = '±0'; }
+  if($('#titleKerningRange')){ $('#titleKerningRange').value = 0; }
+  if($('#accentKerning')){ $('#accentKerning').value = 0; }
+}
+
+$('#btnShuffle').addEventListener('click',()=>{
+  _smartCompose({});
+  _syncShuffleUI();
   render();
   toast('Shuffled');
 });
@@ -2286,92 +2949,7 @@ function iconSVG(icon, color){
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${icon.vb}" width="100%" height="100%"><path fill="${color}" d="${icon.path}"/></svg>`;
 }
 
-(function buildIconSection(){
-  /* ─── Icon grid ─── */
-  const grid = $('#iconGrid');
-  // "None" cell first
-  const noneCell = document.createElement('div');
-  noneCell.className = 'icon-cell icon-none' + (!state.iconId ? ' active' : '');
-  noneCell.textContent = '∅';
-  noneCell.title = 'No icon';
-  noneCell.onclick = () => { state.iconId = null; refreshIconGrid(); render(); };
-  grid.appendChild(noneCell);
 
-  ICONS.forEach(ic => {
-    const cell = document.createElement('div');
-    cell.className = 'icon-cell' + (state.iconId === ic.id ? ' active' : '');
-    cell.title = ic.label;
-    cell.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ic.vb}" width="22" height="22"><path fill="currentColor" d="${ic.path}"/></svg><span class="ic-label">${ic.label}</span>`;
-    cell.onclick = () => { state.iconId = ic.id; refreshIconGrid(); render(); };
-    grid.appendChild(cell);
-  });
-
-  function refreshIconGrid(){
-    $$('#iconGrid .icon-cell').forEach(c => c.classList.remove('active'));
-    if(!state.iconId){
-      $$('#iconGrid .icon-none')[0]?.classList.add('active');
-    } else {
-      const idx = ICONS.findIndex(i=>i.id===state.iconId);
-      if(idx>=0) $$('#iconGrid .icon-cell')[idx+1]?.classList.add('active');
-    }
-    $('#sec12').classList.toggle('done', !!state.iconId);
-  }
-
-  /* ─── Treatment chips ─── */
-  $$('#iconTreatmentChips .chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.iconTreatment = btn.dataset.itreat;
-      $$('#iconTreatmentChips .chip').forEach(b => b.classList.toggle('active', b===btn));
-      render();
-    });
-  });
-
-  /* ─── Position chips ─── */
-  $$('#iconPosChips .chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if(btn.classList.contains('deselectable') && btn.classList.contains('active')){
-        // deselect — do nothing special, pos stays
-        return;
-      }
-      state.iconPos = btn.dataset.ipos;
-      $$('#iconPosChips .chip').forEach(b => b.classList.toggle('active', b===btn));
-      render();
-    });
-  });
-  // Init position highlight
-  $$('#iconPosChips .chip').forEach(b => b.classList.toggle('active', b.dataset.ipos === state.iconPos));
-
-  /* ─── Size slider ─── */
-  const sizeSlider = $('#iconSizeRange');
-  const sizeVal    = $('#iconSizeVal');
-  sizeSlider.addEventListener('input', () => {
-    state.iconSize = parseInt(sizeSlider.value);
-    sizeVal.textContent = state.iconSize;
-    render();
-  });
-})();
-
-function buildIconLayerHTML(palette){
-  if(!state.iconId) return '';
-  const ic = ICONS.find(i=>i.id===state.iconId);
-  if(!ic) return '';
-
-  const sz = state.iconSize;
-  const pad = Math.round(sz * 0.25); // padding inside circle
-  const inner = sz - pad * 2;
-
-  let bgStyle = '', iconColor = '';
-  if(state.iconTreatment === 'yb'){
-    bgStyle = `background:#FDCC08;`; iconColor = '#09090F';
-  } else if(state.iconTreatment === 'by'){
-    bgStyle = `background:#09090F;`; iconColor = '#FDCC08';
-  } else {
-    bgStyle = `background:transparent;`; iconColor = palette.accent;
-  }
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ic.vb}" width="${inner}" height="${inner}"><path fill="${iconColor}" d="${ic.path}"/></svg>`;
-  return `<div class="icon-layer ${state.iconPos}" style="width:${sz}px;height:${sz}px;border-radius:50%;${bgStyle}padding:${pad}px;">${svg}</div>`;
-}
 
 function render(){
   const fmt = FORMATS[state.format];
@@ -2427,13 +3005,16 @@ function render(){
       const acc = state.wordAccents[myIdx];
       if(!acc) return escapeHtml(tok);
       if(acc.style==='script'){
-        /* 1.5em is the CSS baseline on .accent; state.accentSize is the
-           user-facing multiplier (1.0 = 100% in the slider). Multiplying
-           here preserves the baseline look while letting users scale up/down. */
         const fs = (1.5 * (state.accentSize || 1)).toFixed(3);
-        return `<span class="accent" style="color:${acc.color};font-size:${fs}em">${escapeHtml(tok)}</span>`;
+        const nx = +acc.nudgeX || 0, ny = +acc.nudgeY || 0;
+        const nudgeCSS = (nx||ny) ? `display:inline-block;transform:translate(${nx}px,${ny}px);` : '';
+        return `<span class="accent" style="color:${acc.color};font-size:${fs}em;letter-spacing:${state.accentKerning}em;${nudgeCSS}">${escapeHtml(tok)}</span>`;
       }
-      if(acc.style==='color')  return `<span style="color:${acc.color}">${escapeHtml(tok)}</span>`;
+      if(acc.style==='color'){
+        const nx = +acc.nudgeX || 0, ny = +acc.nudgeY || 0;
+        const nudgeCSS = (nx||ny) ? `display:inline-block;transform:translate(${nx}px,${ny}px);` : '';
+        return `<span style="color:${acc.color};letter-spacing:${state.accentKerning}em;${nudgeCSS}">${escapeHtml(tok)}</span>`;
+      }
       return escapeHtml(tok);
     }).join('');
   }).join('');
@@ -2443,25 +3024,25 @@ function render(){
   const baseSub  = fmt.w < 400 ? 15 : 17;
   const headlineSize = Math.round(baseHead * state.typeScale + state.headlineFine);
   const sublineSize  = Math.round(baseSub  * state.typeScale);
-  const eyebrowSize  = Math.round(11 * state.typeScale);
+  /* Eyebrow size is base 11px × typeScale × user pill scale (state.eyebrowScale, 100=1×) */
+  const eyebrowSize  = Math.round(11 * state.typeScale * (state.eyebrowScale || 100) / 100);
   const ctaSize      = Math.round(13 * state.typeScale);
   const leading      = state.leading;
 
-  /* Layers */
-  const stripeEl = state.stripe==='none' ? '' :
+  /* Layers — visibility toggles in the section heads override these:
+       state.stripeOn=false → no stripe regardless of state.stripe value
+       state.handsOn=false  → no hand layers regardless of state.hands count
+       state.logoOn=false   → no logo regardless of logoPos */
+  const stripeEl = (state.stripeOn === false || state.stripe==='none') ? '' :
     (state.stripe==='rainbow'
       ? `<div class="stripe rainbow ${state.stripePos}" style="background:${buildBrickGradient(state.rainbowColors, state.stripePos)}"></div>`
       : `<div class="stripe ${state.stripe} ${state.stripePos}" ${state.stripe==='solid'?`style="background:${state.stripeColor||palette.accent}"`:''}></div>`);
 
-  /* Hand swirl layers — one per slot (max 3). Each slot is sized as % of
-     the shorter canvas edge; anchored to its chosen corner (TL/TR/BL/BR);
-     offset from that anchor via nudge X/Y (% of canvas width/height);
-     rotated around its own center; and optionally flipped horizontally +
-     softened. Each slot is draggable on the canvas — drag updates that
-     slot's nudge X/Y in real time and focuses it for editing. */
+  /* Hand swirl layers — one per slot (max MAX_HANDS). */
   let handsHTML = '';
   const shortEdge = Math.min(fmt.w, fmt.h);
-  state.hands.forEach((slot, i)=>{
+  const renderHands = state.handsOn !== false ? state.hands : [];
+  renderHands.forEach((slot, i)=>{
     if(!slot || !slot.key || !HANDS[slot.key]) return;
     // NOTE: we intentionally do NOT migrate slot.color when the bg changes.
     // The color picker offers "Best Picks" (harmony) + "Other Colors" (every
@@ -2492,56 +3073,130 @@ function render(){
   });
 
   const logoHTML = buildLogoHTML();
-  const iconHTML = buildIconLayerHTML(palette);
 
+  /* Eyebrow pill — pill color follows harmony unless user overrides via state.eyebrowColor.
+     Text color follows pill unless user overrides via state.eyebrowTextColor. */
+  const eyebrowC = state.eyebrowColor || palette.accent;
+  const eyebrowTextC = state.eyebrowTextColor || eyebrowC;
   const eyebrowHTML = state.showEyebrow && state.eyebrow ?
-    `<span class="eyebrow" style="background:${palette.accent}22;color:${palette.ink};border:1px solid ${palette.accent};font-size:${eyebrowSize}px">${escapeHtml(state.eyebrow)}</span>` : '';
+    `<span class="eyebrow" style="background:${eyebrowC}22;color:${eyebrowTextC};border:1px solid ${eyebrowC};font-size:${eyebrowSize}px">${escapeHtml(state.eyebrow)}</span>` : '';
+  /* Refresh eyebrow swatch UI so the ★ badge tracks current state */
+  if(typeof rebuildEyebrowSwatches==='function') rebuildEyebrowSwatches();
+  if(typeof rebuildEyebrowTextSwatches==='function') rebuildEyebrowTextSwatches();
+  if(typeof rebuildHeadlineSwatches==='function') rebuildHeadlineSwatches();
+  if(typeof rebuildSublineSwatches==='function') rebuildSublineSwatches();
+
+  /* Effective text colors — null state.X → use palette.ink (auto from harmony) */
+  const headlineColorC = state.headlineColor || palette.ink;
+  const sublineColorC  = state.sublineColor  || palette.ink;
 
   const sublineHTML = state.showSubline && state.subline ?
-    `<p class="subline" style="color:${palette.ink};font-size:${sublineSize}px">${escapeHtml(state.subline)}</p>` : '';
+    `<p class="subline" style="color:${sublineColorC};font-size:${sublineSize}px">${escapeHtml(state.subline)}</p>` : '';
 
   const ctaHTML = state.showCTA && state.cta ?
     `<span class="cta" style="background:${palette.cta};color:${palette.ctaInk};font-size:${ctaSize}px">${escapeHtml(state.cta)}</span>` : '';
 
-  const contentPos = state.layout==='center' ? 'center' : state.layout==='top' ? 'top' : 'bottom';
-  const textAlign = state.layout==='center' ? 'center' : 'left';
+  const L = LAYOUTS.find(l=>l.k===state.layout) || LAYOUTS[7];
+  /* text-align must match align-items so wrapped headlines stay aligned with the block.
+     flex-start → left, center → center, flex-end → right. Without this, multi-line
+     headlines drift left even when the block is right-anchored — and the bug is most
+     visible when Fine-Tune Heading grows the headline enough to force wrapping. */
+  const textAlign = L.x==='center' ? 'center' : (L.x==='flex-end' ? 'right' : 'left');
+  const wrapStyle = `display:flex;flex-direction:column;align-items:${L.x};justify-content:${L.align};width:100%;height:100%;padding:32px;`;
 
-  canvas.style.cssText += ';'+bgStyle;
+  /* Border — real CSS border on the canvas. When corners are curved, the
+     four wedges OUTSIDE the rounded canvas are painted by setting the
+     canvasWrap's background to the border color. Behavior matrix:
+       borderOn=true,  radius=0  → solid border, no wrap bg, canvas square
+       borderOn=true,  radius>0  → solid border, wrap bg = borderColor (corner fill)
+       borderOn=false, radius=0  → no border, no wrap bg, canvas square
+       borderOn=false, radius>0  → no border, no wrap bg, canvas rounded (app bg shows in corners)
+  */
+  const maxR = Math.floor(Math.min(fmt.w, fmt.h) / 2);
+  const W = state.borderWidth || 0;
+  const borderActive = state.borderOn && W > 0;
+  const canvasRadius = Math.max(0, Math.min(state.outerRadius || 0, maxR));
+  const canvasBorderCSS = borderActive ? `border:${W}px solid ${state.borderColor};` : '';
+  const cornerFillActive = borderActive && canvasRadius > 0;
+
   canvas.innerHTML = `
     ${bgImageEl}
     ${overlayEl}
     ${stripeEl}
     ${handsHTML}
     ${logoHTML}
-    ${iconHTML}
-    <div class="content ${contentPos}" style="text-align:${textAlign}">
+    <div class="content" style="${wrapStyle};text-align:${textAlign};position:relative;z-index:2">
       ${eyebrowHTML}
-      <h1 class="headline" style="color:${palette.ink};font-size:${headlineSize}px;line-height:${leading}">${headlineHTML}</h1>
+      <h1 class="headline" style="color:${headlineColorC};font-size:${headlineSize}px;line-height:${leading};letter-spacing:${state.titleKerning}em">${headlineHTML}</h1>
       ${sublineHTML}
       ${ctaHTML}
     </div>
   `;
-  /* remove inline duplicate bg: reset */
-  canvas.style.cssText = `width:${fmt.w}px;height:${fmt.h}px;${bgStyle};transform-origin:center top;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);`;
+  /* Final canvas style — write ALL inline styles at once so nothing leaks
+     across renders. Use background-color (not the shorthand) so it doesn't
+     get clobbered by background-image / background-size from the .canvas
+     CSS class. The bgImageEl child handles image-mode separately. */
+  const explicitBg = (state.bgMode === 'image' && state.bgImage) ? '#000' : (state.bgColor || '#FDF8F6');
+  canvas.style.cssText =
+    `width:${fmt.w}px;` +
+    `height:${fmt.h}px;` +
+    `background:none;` +              // clear any prior shorthand bg
+    `background-color:${explicitBg};` + // explicit color always wins
+    canvasBorderCSS +
+    `border-radius:${canvasRadius}px;` +
+    `box-sizing:border-box;` +
+    `transform-origin:center top;` +
+    `position:relative;` +
+    `overflow:hidden;` +
+    /* When corner-fill is active, the wrap owns the visible drop-shadow so the
+       canvas's own shadow doesn't tint the corner-fill color (causing the
+       outside corners to look darker than the canvas border). When NOT
+       corner-fill, the canvas itself carries the shadow as before. */
+    (cornerFillActive ? `box-shadow:none;` : `box-shadow:var(--shadow-lg);`);
 
-  /* section "done" indicators */
-  $('#sec1').classList.toggle('done', !!state.format);
-  $('#sec2').classList.toggle('done', !!state.vertical);
-  $('#sec3').classList.toggle('done', !!state.bgColor || !!state.bgImage);
-  $('#sec4').classList.toggle('done', !!state.headline.trim());
-  $('#sec5').classList.toggle('done', !!state.cta.trim());
-  $('#sec6').classList.toggle('done', !!state.layout);
-  $('#sec8').classList.toggle('done', state.logoPos!=='none');
-  $('#sec9').classList.toggle('done', state.stripe!=='none');
-  $('#sec10').classList.toggle('done', state.hands.length > 0);
-  $('#sec12').classList.toggle('done', !!state.iconId);
+  /* Reset canvasWrap inline styles every render, then re-apply only when
+     corner-fill is needed. Doing the reset unconditionally guarantees no
+     stale dimensions / background bleed across vertical/format/border swaps. */
+  const wrapEl = $('#canvasWrap');
+  if(wrapEl){
+    // Always start clean
+    wrapEl.style.width = '';
+    wrapEl.style.height = '';
+    wrapEl.style.background = '';
+    wrapEl.style.borderRadius = '';
+    wrapEl.style.boxShadow = '';
+    if(cornerFillActive){
+      wrapEl.style.width = fmt.w + 'px';
+      wrapEl.style.height = fmt.h + 'px';
+      wrapEl.style.background = state.borderColor;
+      wrapEl.style.borderRadius = '0';
+      // Carry the drop-shadow on the unified outer frame so the corner color
+      // matches the canvas border exactly (no shadow tint inside the wedges).
+      wrapEl.style.boxShadow = 'var(--shadow-lg)';
+    }
+  }
+
+  /* Section "done" indicators — IDs follow the new sidebar order:
+     sec1=Format, sec2=Vertical, sec3=Layout, sec4=Background, sec5=Logo,
+     sec6=Border, sec7=Text, sec8=CTA, sec9=Hand, sec10=Stripe. */
+  const _set = (id, v) => { const el = $(id); if(el) el.classList.toggle('done', !!v); };
+  _set('#sec1',  !!state.format);
+  _set('#sec2',  !!state.vertical);
+  _set('#sec3',  !!state.layout);
+  _set('#sec4',  !!state.bgColor || !!state.bgImage);
+  _set('#sec5',  state.logoOn !== false && state.logoPos !== 'none');
+  _set('#sec6',  state.borderOn);
+  _set('#sec7',  !!state.headline.trim());
+  _set('#sec8',  state.showCTA && !!state.cta.trim());
+  _set('#sec9',  state.handsOn !== false && state.hands.length > 0);
+  _set('#sec10', state.stripeOn !== false && state.stripe !== 'none');
 
   /* rebuild word chips */
   buildWordChips();
 }
 
 function buildLogoHTML(){
-  if(state.logoPos==='none') return '';
+  if(state.logoOn === false || state.logoPos==='none') return '';
   const lockup = state.logoLockup;
   /* For mark: width == height, roughly. For wordmark: use aspect 615/172 ~= 3.57 */
   const h = state.logoSize;
@@ -2585,6 +3240,7 @@ function buildWordChips(){
       const color = acc?acc.color:'#ED3668';
       $$('#swAccent .swatch').forEach(s=>s.classList.toggle('active',s.dataset.v===color));
       $('#accentControls').style.display='block';
+      syncNudgeFields();
     } else {
       $('#accentControls').style.display='none';
     }
@@ -2636,6 +3292,26 @@ async function exportPNG(){
 /* =======================================================================
    KICK OFF
    ======================================================================= */
+
+/* Mobile drawer toggle */
+if(window.matchMedia('(max-width: 1023px)').matches){
+  const sidebars = $$('.sidebar');
+  sidebars.forEach(sb => {
+    if(sb.querySelector('.drawer-toggle')) return;
+    const btn = document.createElement('button');
+    btn.className = 'drawer-toggle';
+    btn.style.cssText = 'position:sticky;top:0;width:100%;height:56px;background:#fff;color:#09090F;border:none;font-weight:600;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,0.08);z-index:10;';
+    btn.textContent = 'Edit ▲';
+    btn.onclick = () => {
+      sb.classList.toggle('open');
+      btn.textContent = sb.classList.contains('open') ? 'Done ▼' : 'Edit ▲';
+    };
+    sb.insertBefore(btn, sb.firstChild);
+  });
+}
+/* Sync every section toggle's visual state from `state` so the switches
+   (and the dimmed-body class) reflect actual visibility on first paint. */
+if(typeof _syncToggleVisualState === 'function') _syncToggleVisualState();
 render();
 </script>
 </body>

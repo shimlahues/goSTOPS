@@ -1,7 +1,8 @@
-<!-- v8 — 2026-04-25; Headline + Subline color pickers added;
-     same Auto / Best Picks / Other Colors pattern; null = harmony auto;
-     shuffle resets all manual color overrides (eyebrow/text/headline/subline)
-     so coordinated palette stays in control -->
+<!-- v9 — 2026-04-25; verticals updated to PDF Brand Blueprint:
+     5 verticals (Stays/Events/Workation/goCOINS/Experiences) with proper copy + CTAs;
+     vertical tints (#FDEBF0/#F0F0F7/#ECF9FE/#FEF5EB/#EDF9F9) added to Light bg picker;
+     shuffle now syncs visibility flags (logoOn/handsOn/stripeOn/showCTA/showEyebrow/showSubline)
+     so sidebar toggles match canvas after every shuffle -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1435,7 +1436,15 @@ const NEUTRAL = [
   {k:'grey',  v:'#A1A1AA'},
   {k:'smoke', v:'#71717A'},
 ];
+/* LIGHT — editorial canvases. The first 5 entries are the per-vertical
+   tints from the Brand Blueprint PDF (much lighter washes); the next 6 are
+   the original mid-light tints kept for variety. */
 const LIGHT = [
+  {k:'stays-tint',       v:'#FDEBF0'},
+  {k:'events-tint',      v:'#F0F0F7'},
+  {k:'workation-tint',   v:'#ECF9FE'},
+  {k:'gocoins-tint',     v:'#FEF5EB'},
+  {k:'experiences-tint', v:'#EDF9F9'},
   {k:'pink-lt',   v:'#FADDE6'},
   {k:'purple-lt', v:'#E0E0F0'},
   {k:'sky-lt',    v:'#D6F1FC'},
@@ -1497,6 +1506,12 @@ const HARMONY = {
   '#FCE4CF': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
   '#DCF1F2': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
   '#FFF1B8': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  /* Vertical tints from PDF Brand Blueprint — paired with their parent vertical */
+  '#FDEBF0': { text:['#ED3668','#6667AE','#1D1D26','#09090F'],                          accent:['#ED3668','#6667AE','#1D1D26','#09090F'] },
+  '#F0F0F7': { text:['#6667AE','#ED3668','#1D1D26','#09090F'],                          accent:['#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#ECF9FE': { text:['#6667AE','#44C7F4','#ED3668','#1D1D26','#09090F'],                accent:['#44C7F4','#6667AE','#ED3668','#1D1D26','#09090F'] },
+  '#FEF5EB': { text:['#6667AE','#F79839','#1D1D26','#09090F'],                          accent:['#F79839','#6667AE','#1D1D26','#09090F'] },
+  '#EDF9F9': { text:['#6667AE','#48C1C4','#ED3668','#1D1D26','#09090F'],                accent:['#48C1C4','#6667AE','#ED3668','#1D1D26','#09090F'] },
 };
 const ALL_ACCENT_META = {
   '#ED3668':'Pink','#6667AE':'Purple','#44C7F4':'Sky','#F79839':'Orange',
@@ -1515,14 +1530,32 @@ const FORMATS = {
   banner: {w:640, h:360, exportW:1920, exportH:1080, label:'Landscape 16:9',   dim:'1920 × 1080'},
 };
 
-/* Verticals */
+/* Verticals — five categories from the goSTOPS × Shimla Hues Brand Blueprint.
+   Each vertical has a primary color (used for the canvas BG by default) and
+   a matching tint (a much-lighter wash, useful as an editorial light bg).
+   Yellow #FDCC08 is the brand's PRIMARY color (CTAs/accents) and is NOT a
+   vertical — it stays available in every accent picker. */
 const VERTICALS = [
-  {k:'leisure',    name:'Leisure',    color:'#ED3668', eyebrow:'Stay & Unwind',    headline:'Cosy beds,{break}endless chai',  subline:'Hostels in the hills, on the coast, and everywhere in between.', cta:'Find a stop →'},
-  {k:'treks',      name:'Treks',      color:'#6667AE', eyebrow:'Trails Calling',   headline:'Boots on,{break}breath in',       subline:'Guided treks across the Himalayas. Safe, small groups, great food.', cta:'Pick a trek →'},
-  {k:'trips',      name:'Trips',      color:'#44C7F4', eyebrow:'Go & Gather',      headline:'New city,{break}new crew',        subline:'Weekend getaways, long hauls, solo-friendly always.',              cta:'See the trips →'},
-  {k:'community',  name:'Community',  color:'#F79839', eyebrow:'Your Kind of Crew',headline:'Strangers{break}become stops',    subline:'Events, jams, open mics and road stories at every goSTOPS.',       cta:'Join in →'},
-  {k:'learn',      name:'Learn',      color:'#48C1C4', eyebrow:'Learn On The Road',headline:'Skills,{break}served with view', subline:'Workshops, residencies, and hands-on learning in the wild.',         cta:'Browse →'},
-  {k:'work',       name:'Work',       color:'#FDCC08', eyebrow:'Work. Play. Stay.', headline:'Wi-Fi here,{break}mountains there',subline:'Remote-work ready hostels with strong Wi-Fi and stronger coffee.',cta:'Book a desk →'},
+  {k:'stays',       name:'Stays + Coliving', color:'#ED3668', tint:'#FDEBF0',
+    eyebrow:'Stay & Unwind',     headline:'Cosy beds,{break}endless chai',
+    subline:'Property bookings, check-in/out — easy as it gets.',
+    cta:'Book a stay →'},
+  {k:'events',      name:'Events + Members', color:'#6667AE', tint:'#F0F0F7',
+    eyebrow:'Better Together',   headline:'Your people,{break}your places',
+    subline:'Loyalty, membership, belonging.',
+    cta:'Become a member →'},
+  {k:'workation',   name:'Workation',        color:'#44C7F4', tint:'#ECF9FE',
+    eyebrow:'Work. Play. Stay.', headline:'Wi-Fi here,{break}mountains there',
+    subline:'Corporate, work, team offsites — sorted.',
+    cta:'Plan a workation →'},
+  {k:'gocoins',     name:'goCOINS',          color:'#F79839', tint:'#FEF5EB',
+    eyebrow:'Earn As You Roam',  headline:'Earn coins,{break}go places',
+    subline:'Rewards, goCOINS, referrals.',
+    cta:'See rewards →'},
+  {k:'experiences', name:'Experiences',      color:'#48C1C4', tint:'#EDF9F9',
+    eyebrow:'Show Up. Stay Late.', headline:'New city,{break}new crew',
+    subline:'Community, events, social moments.',
+    cta:'Find an experience →'},
 ];
 
 /* Layout presets */
@@ -1724,36 +1757,32 @@ function revertVerticalPreset(){
 
 /* Per-vertical copy variants (3 each — first matches the original).
    The pill's ⟳ button cycles colors / copy / layout for that vertical only. */
+/* Per-vertical copy variants — each pill's ⟳ icon cycles through these. */
 const VERTICAL_VARIANTS = {
-  leisure: [
-    {eyebrow:'Stay & Unwind',     headline:'Cosy beds,{break}endless chai',     subline:'Hostels in the hills, on the coast, and everywhere in between.',  cta:'Find a stop →'},
-    {eyebrow:'Slow Mornings',     headline:'Soft beds,{break}long mornings',    subline:'Easy stays for travelers who like to take their time.',           cta:'Browse stays →'},
-    {eyebrow:'Hill Air, Soft Beds', headline:'Pause.{break}Stay. Repeat.',      subline:'Restful hostels with great food, great Wi-Fi, great people.',     cta:'See stays →'},
+  stays: [
+    {eyebrow:'Stay & Unwind',     headline:'Cosy beds,{break}endless chai',      subline:'Property bookings, check-in/out — easy as it gets.',         cta:'Book a stay →'},
+    {eyebrow:'Soft Beds, Long Mornings', headline:'Pause.{break}Stay. Repeat.',  subline:'Comfortable rooms, hot showers, fast check-in.',             cta:'Find a property →'},
+    {eyebrow:'Hill Air & Sea Air', headline:'Where you sleep{break}sets the tone', subline:'Private rooms, dorms and coliving in 30+ destinations.',   cta:'Browse stays →'},
   ],
-  treks: [
-    {eyebrow:'Trails Calling',    headline:'Boots on,{break}breath in',         subline:'Guided treks across the Himalayas. Safe, small groups, great food.', cta:'Pick a trek →'},
-    {eyebrow:'Above the Clouds',  headline:'Climb high,{break}sleep warm',      subline:'Small-group treks with experienced guides and warm hostels at the end of every day.', cta:'See treks →'},
-    {eyebrow:'Slow & Steady',     headline:'One ridge,{break}then another',     subline:'Multi-day mountain trips for first-timers and old-timers.',        cta:'Plan a trek →'},
+  events: [
+    {eyebrow:'Better Together',   headline:'Your people,{break}your places',     subline:'Loyalty, membership, belonging.',                            cta:'Become a member →'},
+    {eyebrow:'Members Only',      headline:'Belong{break}from day one',          subline:'A pass that gets you into the room — and the after-party.',  cta:'Join the club →'},
+    {eyebrow:'Card. Carried.',    headline:'A pass that{break}travels with you', subline:'Member perks at every goSTOPS, every event, every stop.',    cta:'See benefits →'},
   ],
-  trips: [
-    {eyebrow:'Go & Gather',       headline:'New city,{break}new crew',          subline:'Weekend getaways, long hauls, solo-friendly always.',             cta:'See the trips →'},
-    {eyebrow:'Roads & Roads',     headline:'Pack light,{break}land lighter',    subline:'Curated trips for solo travelers who like company without the noise.', cta:'Browse trips →'},
-    {eyebrow:'New Town, New Friends', headline:'Strangers now,{break}friends later', subline:'Solo-friendly hostels and trips that match your energy.',     cta:'Find a trip →'},
+  workation: [
+    {eyebrow:'Work. Play. Stay.', headline:'Wi-Fi here,{break}mountains there',  subline:'Corporate, work, team offsites — sorted.',                   cta:'Plan a workation →'},
+    {eyebrow:'Office With A View', headline:'Standups,{break}then sunsets',      subline:'Coliving for remote workers — fast Wi-Fi, comfy desks.',     cta:'Reserve a desk →'},
+    {eyebrow:'Team Offsites Made Easy', headline:'Bring the team.{break}Bring the work.', subline:'Group stays, meeting rooms, full IT — handled.',   cta:'Plan an offsite →'},
   ],
-  community: [
-    {eyebrow:'Your Kind of Crew', headline:'Strangers{break}become stops',      subline:'Events, jams, open mics and road stories at every goSTOPS.',      cta:'Join in →'},
-    {eyebrow:'Better Together',   headline:'Your people,{break}probably here',  subline:'Open mics, jam sessions, board games — nights that turn into stories.', cta:'Drop in →'},
-    {eyebrow:'Show Up. Stay Late.', headline:'Friends made{break}at 11pm',      subline:'Common-room culture, every hostel, every night.',                  cta:'See events →'},
+  gocoins: [
+    {eyebrow:'Earn As You Roam',  headline:'Earn coins,{break}go places',        subline:'Rewards, goCOINS, referrals.',                               cta:'See rewards →'},
+    {eyebrow:'Stays Pay Back',    headline:'Every stay{break}earns goCOINS',     subline:'Rack them up, redeem on your next trip — or a friend\'s.',   cta:'Check balance →'},
+    {eyebrow:'Refer & Earn',      headline:'Bring a friend,{break}both win',     subline:'goCOINS for you, a discount for them.',                      cta:'Get my code →'},
   ],
-  learn: [
-    {eyebrow:'Learn On The Road', headline:'Skills,{break}served with view',    subline:'Workshops, residencies, and hands-on learning in the wild.',      cta:'Browse →'},
-    {eyebrow:'School Without Walls', headline:'Class is{break}wherever you stay', subline:'Photography, ceramics, writing — workshops you can actually attend.', cta:'See classes →'},
-    {eyebrow:'Hands On',          headline:'Pick up{break}something new',       subline:'Short residencies and weekend workshops in pretty places.',       cta:'Find a course →'},
-  ],
-  work: [
-    {eyebrow:'Work. Play. Stay.', headline:'Wi-Fi here,{break}mountains there', subline:'Remote-work ready hostels with strong Wi-Fi and stronger coffee.',cta:'Book a desk →'},
-    {eyebrow:'Office With A View', headline:'Standups,{break}then sunsets',     subline:'Coliving for remote workers — fast Wi-Fi, comfy desks, no decision fatigue.', cta:'Reserve a desk →'},
-    {eyebrow:'Slow Work, Big Views', headline:'Remote work,{break}better backdrops', subline:'Long-stay friendly hostels with reliable Wi-Fi and quiet zones.', cta:'See coliving →'},
+  experiences: [
+    {eyebrow:'Show Up. Stay Late.', headline:'New city,{break}new crew',         subline:'Community, events, social moments.',                          cta:'Find an experience →'},
+    {eyebrow:'Friends Made Late', headline:'Strangers{break}become stops',       subline:'Open mics, jam sessions, road stories — every night.',        cta:'Drop in →'},
+    {eyebrow:'Roads & Roads',     headline:'Pack light,{break}land lighter',     subline:'Curated trips, weekend getaways, solo-friendly always.',      cta:'See trips →'},
   ],
 };
 let _verticalVariantIdx = {}; // remembers cycle position per vertical
@@ -2895,6 +2924,17 @@ function _smartCompose(opts){
   state.sublineColor  = null;
   state.eyebrowColor  = null;
   state.eyebrowTextColor = null;
+
+  /* --- 11. Sync visibility flags to what was actually generated, so the
+     sidebar section toggles stay in lockstep with the canvas. Without this,
+     a shuffle that picks (say) a stripe leaves the Stripe toggle "off" while
+     the stripe is visible — confusing. */
+  state.logoOn   = state.logoPos !== 'none';
+  state.handsOn  = state.hands.length > 0;
+  state.stripeOn = state.stripe !== 'none';
+  state.showCTA  = !!state.cta;
+  state.showEyebrow = !!state.eyebrow;
+  state.showSubline = !!state.subline;
 }
 
 function _syncShuffleUI(){
@@ -2909,10 +2949,18 @@ function _syncShuffleUI(){
   syncStripeColorUI();
   syncAllHandUI();
   if(typeof rebuildAccentSwatches==='function') rebuildAccentSwatches(harmonyFor(state.bgColor).accent);
+  // Reflect any text input changes (per-pill shuffle changes copy)
+  if($('#eyebrowInput'))  $('#eyebrowInput').value  = state.eyebrow  || '';
+  if($('#headlineInput')) $('#headlineInput').value = state.headline || '';
+  if($('#sublineInput'))  $('#sublineInput').value  = state.subline  || '';
+  if($('#ctaInput'))      $('#ctaInput').value      = state.cta      || '';
   // reset slider UI for cleared values
   if($('#headlineFine')){ $('#headlineFine').value = 0; $('#headlineFineVal').textContent = '±0'; }
   if($('#titleKerningRange')){ $('#titleKerningRange').value = 0; }
   if($('#accentKerning')){ $('#accentKerning').value = 0; }
+  // CRITICAL: sync section visibility toggles + .is-hidden body dimming
+  // so what the canvas shows matches what the sidebar advertises.
+  if(typeof _syncToggleVisualState === 'function') _syncToggleVisualState();
 }
 
 $('#btnShuffle').addEventListener('click',()=>{

@@ -1,8 +1,21 @@
-<!-- v9 — 2026-04-25; verticals updated to PDF Brand Blueprint:
-     5 verticals (Stays/Events/Workation/goCOINS/Experiences) with proper copy + CTAs;
-     vertical tints (#FDEBF0/#F0F0F7/#ECF9FE/#FEF5EB/#EDF9F9) added to Light bg picker;
-     shuffle now syncs visibility flags (logoOn/handsOn/stripeOn/showCTA/showEyebrow/showSubline)
-     so sidebar toggles match canvas after every shuffle -->
+<!-- v10 — 2026-04-27; bug fixes + features:
+     • Word-accent "Other Colors" picks were being clobbered on every render
+       because the migration loop wiped any color not in the current harmony.
+       Now matches the hand-color philosophy: only reset truly-invalid (non-brand)
+       hexes, so deliberate off-harmony picks survive.
+     • Corner-fill (curved border) now bulletproof against shuffle: wrap padding
+       is explicitly zeroed and the canvas is absolutely-positioned so flex
+       alignment can't introduce a "cut background" gap between border and
+       corner wedge.
+     • HARD GUARDRAIL: when a vertical is active (Stays/Events/Workation/
+       goCOINS/Experiences), shuffles only pick from that vertical's color
+       family — primary or its tint. Stays creatives stay pink, Workation
+       stays sky, etc. Without an active vertical, the random pool is unchanged.
+     • Export dialog: PNG/JPEG, 1×/2×/4× or custom width, JPEG quality slider,
+       live dimension readout. Clicking the Export button now opens the dialog
+       instead of rasterizing immediately.
+     v9 baseline — 5 verticals (Stays/Events/Workation/goCOINS/Experiences),
+     PDF Brand Blueprint tints, shuffle visibility-flag sync. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -835,6 +848,87 @@
    BORDER FRAME (inner-only mode)
    ============================================ */
 .border-frame { will-change:transform; }
+
+/* ============================================
+   EXPORT DIALOG
+   Modal overlay shown when user clicks Export. Lets them pick format
+   (PNG / JPEG), output size (1× / 2× / 4× / custom), and JPEG quality.
+   ============================================ */
+.export-dialog-backdrop {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(9,9,15,0.55); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
+}
+.export-dialog-backdrop.open { display:flex; }
+.export-dialog {
+  background:#fff; color:var(--ink);
+  width:100%; max-width:440px;
+  border-radius:16px;
+  box-shadow:0 20px 60px rgba(9,9,15,0.35);
+  padding:24px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+}
+.export-dialog h3 {
+  margin:0 0 4px; font-size:18px; font-weight:800; letter-spacing:-0.01em;
+}
+.export-dialog .export-sub {
+  margin:0 0 20px; color:var(--mute); font-size:13px;
+}
+.export-dialog .export-row { margin-bottom:18px; }
+.export-dialog .export-row > label.export-label {
+  display:block; font-size:11px; font-weight:800;
+  letter-spacing:0.05em; text-transform:uppercase;
+  color:var(--ink); margin-bottom:8px;
+}
+.export-dialog .export-row .slider-val {
+  font-size:11px; color:var(--mute); font-weight:600; margin-left:6px;
+}
+.export-dialog .seg {
+  display:flex; gap:6px; flex-wrap:wrap;
+}
+.export-dialog .seg button {
+  flex:1; min-width:70px;
+  padding:10px 12px; border:1px solid var(--line);
+  background:#fff; color:var(--ink);
+  font-size:13px; font-weight:600; border-radius:8px;
+  cursor:pointer; transition:all .15s ease;
+}
+.export-dialog .seg button:hover { border-color:var(--ink); }
+.export-dialog .seg button.active {
+  background:var(--ink); color:#fff; border-color:var(--ink);
+}
+.export-dialog input[type="range"] { width:100%; accent-color:var(--ink); }
+.export-dialog input[type="number"] {
+  width:100%; padding:9px 10px; border:1px solid var(--line);
+  border-radius:8px; font-size:13px; box-sizing:border-box;
+}
+.export-dialog .dim-readout {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 12px; background:#FAFAFA; border:1px solid var(--line);
+  border-radius:8px; font-size:12px; color:var(--mute);
+  margin-top:8px;
+}
+.export-dialog .dim-readout strong { color:var(--ink); font-weight:700; }
+.export-dialog .export-actions {
+  display:flex; gap:10px; margin-top:8px;
+}
+.export-dialog .export-actions button {
+  flex:1; padding:12px 14px; border-radius:8px;
+  font-size:13px; font-weight:700; letter-spacing:0.02em;
+  cursor:pointer; transition:all .15s ease; border:1px solid var(--line);
+}
+.export-dialog .export-actions .btn-cancel {
+  background:#fff; color:var(--ink);
+}
+.export-dialog .btn-cancel:hover { background:#FAFAFA; }
+.export-dialog .export-actions .btn-download {
+  background:var(--ink); color:#fff; border-color:var(--ink);
+}
+.export-dialog .btn-download:hover { background:#000; }
+.export-dialog .btn-download:disabled { opacity:0.6; cursor:not-allowed; }
+.export-dialog .quality-row.disabled { opacity:0.4; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -2801,11 +2895,23 @@ function _smartCompose(opts){
   const _pick = arr => arr[Math.floor(Math.random()*arr.length)];
   const _norm = c => (c||'').toUpperCase();
 
-  /* --- 1. Background ------------------------------------------------- */
+  /* --- 1. Background -------------------------------------------------
+     HARD GUARDRAIL: when a vertical is active, the bg MUST stay in that
+     vertical's color family. Stays = pink, Events = purple, Workation = sky,
+     goCOINS = orange, Experiences = teal. Pool = {primary, tint} so the
+     vertical reads visually consistent across every shuffle. Without an
+     active vertical we fall back to the full CORE/NEUTRAL pool. */
   if(!opts.preserveBg && state.bgMode === 'solid'){
-    // Bias toward CORE (vibrant) over neutrals — neutrals only ~25% of the time
-    const pool = Math.random() < 0.75 ? CORE : [...CORE, NEUTRAL[0], NEUTRAL[2]];
-    state.bgColor = _pick(pool).v;
+    const activeV = state.vertical ? VERTICALS.find(x => x.k === state.vertical) : null;
+    if(activeV){
+      const pool = [activeV.color];
+      if(activeV.tint) pool.push(activeV.tint);
+      state.bgColor = pool[Math.floor(Math.random()*pool.length)];
+    } else {
+      // Bias toward CORE (vibrant) over neutrals — neutrals only ~25% of the time
+      const pool = Math.random() < 0.75 ? CORE : [...CORE, NEUTRAL[0], NEUTRAL[2]];
+      state.bgColor = _pick(pool).v;
+    }
   }
   const bgUp = _norm(state.bgColor);
   const harmony = harmonyFor(state.bgColor);
@@ -3027,11 +3133,17 @@ function render(){
   /* CTA is locked to one of two brand-approved combos */
   if(state.ctaStyle === 'yb'){ palette.cta = '#FDCC08'; palette.ctaInk = '#09090F'; }
   else                       { palette.cta = '#09090F'; palette.ctaInk = '#FDCC08'; }
-  /* Migrate any word-accent colors that are no longer harmonious with the new bg */
-  const allowed = new Set(h.accent.map(c=>c.toUpperCase()));
+  /* Word-accent migration: ONLY reset truly-invalid (non-brand) hexes.
+     Mirrors the hand-color philosophy — the picker offers "Best Picks" (harmony)
+     plus "Other Colors" (the rest of the brand palette) precisely so users can
+     pick off-harmony combos on purpose. Wiping those picks on every render
+     fights that intent and was the root cause of "Other Colors" not appearing
+     to update live (the user's pick was being overwritten back to h.accent[0]
+     the moment render() ran). */
+  const allBrandUp = new Set(ALL_BRAND_PALETTE.map(c => c.v.toUpperCase()));
   Object.keys(state.wordAccents).forEach(k=>{
     const e = state.wordAccents[k];
-    if(e && e.color && !allowed.has(e.color.toUpperCase())) e.color = h.accent[0];
+    if(e && e.color && !allBrandUp.has(e.color.toUpperCase())) e.color = h.accent[0];
   });
   /* Rebuild the accent swatch row so only harmonious colors are offered */
   rebuildAccentSwatches(h.accent);
@@ -3204,16 +3316,37 @@ function render(){
 
   /* Reset canvasWrap inline styles every render, then re-apply only when
      corner-fill is needed. Doing the reset unconditionally guarantees no
-     stale dimensions / background bleed across vertical/format/border swaps. */
+     stale dimensions / background bleed across vertical/format/border swaps.
+
+     Bulletproofing notes (v10):
+       • Use setProperty('important') on padding + box-sizing so any responsive
+         CSS rule (e.g. mobile `.canvas-wrap{padding:16px !important}`) can't
+         shrink the wrap relative to the canvas inside it — a mismatch there
+         was the "cut background" the user kept seeing during shuffles.
+       • Force the wrap into a deterministic block layout when corner-fill is
+         active: position:relative, padding:0, exact dimensions = canvas
+         dimensions. The canvas itself is absolutely-positioned so flex
+         alignment can never introduce a 1px seam between border and wedge. */
   const wrapEl = $('#canvasWrap');
   if(wrapEl){
-    // Always start clean
+    // Always start clean — clear EVERYTHING we touch in the corner-fill branch
     wrapEl.style.width = '';
     wrapEl.style.height = '';
     wrapEl.style.background = '';
     wrapEl.style.borderRadius = '';
     wrapEl.style.boxShadow = '';
+    wrapEl.style.removeProperty('padding');
+    wrapEl.style.removeProperty('box-sizing');
+    wrapEl.style.removeProperty('display');
+    canvas.style.removeProperty('position');
+    canvas.style.removeProperty('top');
+    canvas.style.removeProperty('left');
     if(cornerFillActive){
+      // Defeat any responsive `padding: ... !important` so the wrap is exactly
+      // the same size as the canvas it contains.
+      wrapEl.style.setProperty('padding', '0', 'important');
+      wrapEl.style.setProperty('box-sizing', 'border-box', 'important');
+      wrapEl.style.setProperty('display', 'block', 'important');
       wrapEl.style.width = fmt.w + 'px';
       wrapEl.style.height = fmt.h + 'px';
       wrapEl.style.background = state.borderColor;
@@ -3221,6 +3354,11 @@ function render(){
       // Carry the drop-shadow on the unified outer frame so the corner color
       // matches the canvas border exactly (no shadow tint inside the wedges).
       wrapEl.style.boxShadow = 'var(--shadow-lg)';
+      // Pin the canvas to the wrap so flex layout quirks can't introduce
+      // gaps between the border and the corner-fill wedges.
+      canvas.style.setProperty('position', 'absolute');
+      canvas.style.setProperty('top', '0');
+      canvas.style.setProperty('left', '0');
     }
   }
 
@@ -3361,6 +3499,184 @@ if(window.matchMedia('(max-width: 1023px)').matches){
    (and the dimmed-body class) reflect actual visibility on first paint. */
 if(typeof _syncToggleVisualState === 'function') _syncToggleVisualState();
 render();
+</script>
+
+<!-- Export options dialog -->
+<div class="export-dialog-backdrop" id="exportBackdrop" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+  <div class="export-dialog">
+    <h3 id="exportTitle">Export creative</h3>
+    <p class="export-sub">Pick a format, size, and quality before downloading.</p>
+
+    <div class="export-row">
+      <label class="export-label">Format</label>
+      <div class="seg" id="exFormat">
+        <button data-fmt="png" class="active">PNG <small style="opacity:.6">(lossless)</small></button>
+        <button data-fmt="jpeg">JPEG <small style="opacity:.6">(smaller)</small></button>
+      </div>
+    </div>
+
+    <div class="export-row">
+      <label class="export-label">Size</label>
+      <div class="seg" id="exSize">
+        <button data-size="1" class="active">1×</button>
+        <button data-size="2">2×</button>
+        <button data-size="4">4×</button>
+        <button data-size="custom">Custom</button>
+      </div>
+      <div id="exCustomRow" style="display:none;margin-top:10px">
+        <label class="export-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Width <span class="slider-val" id="exCustomWidthVal">2160px</span></span>
+        </label>
+        <input type="range" id="exCustomWidth" min="540" max="6000" step="60" value="2160">
+      </div>
+      <div class="dim-readout">
+        <span>Output dimensions</span>
+        <strong id="exDimReadout">1080 × 1350</strong>
+      </div>
+    </div>
+
+    <div class="export-row quality-row" id="exQualityRow">
+      <label class="export-label">JPEG quality <span class="slider-val" id="exQualityVal">92%</span></label>
+      <input type="range" id="exQuality" min="50" max="100" step="1" value="92">
+    </div>
+
+    <div class="export-actions">
+      <button class="btn-cancel" id="exCancel">Cancel</button>
+      <button class="btn-download" id="exDownload">Download</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================================================================
+   EXPORT DIALOG WIRING (v10)
+   Lets the user pick format (PNG/JPEG), size scale (1×/2×/4×/custom width),
+   and JPEG quality before triggering the actual export. Output dimensions
+   live-update as the user changes settings.
+   ======================================================================= */
+(function(){
+  const backdrop = document.getElementById('exportBackdrop');
+  const fmtSeg   = document.getElementById('exFormat');
+  const sizeSeg  = document.getElementById('exSize');
+  const customRow= document.getElementById('exCustomRow');
+  const customW  = document.getElementById('exCustomWidth');
+  const customWVal = document.getElementById('exCustomWidthVal');
+  const dimRead  = document.getElementById('exDimReadout');
+  const qualityRow = document.getElementById('exQualityRow');
+  const quality  = document.getElementById('exQuality');
+  const qualityVal = document.getElementById('exQualityVal');
+  const cancelBtn  = document.getElementById('exCancel');
+  const downloadBtn= document.getElementById('exDownload');
+  if(!backdrop) return;
+
+  let exFmt = 'png';      // 'png' | 'jpeg'
+  let exSize = '1';       // '1' | '2' | '4' | 'custom'
+
+  function getOutputDims(){
+    const f = FORMATS[state.format];
+    const aspect = f.exportH / f.exportW;
+    let outW;
+    if(exSize === 'custom') outW = +customW.value;
+    else                    outW = f.exportW * (+exSize);
+    const outH = Math.round(outW * aspect);
+    return {w: outW, h: outH};
+  }
+  function syncReadout(){
+    const {w, h} = getOutputDims();
+    dimRead.textContent = `${w} × ${h}`;
+  }
+  function syncQualityRow(){
+    qualityRow.classList.toggle('disabled', exFmt !== 'jpeg');
+  }
+
+  fmtSeg.addEventListener('click', e => {
+    const t = e.target.closest('button[data-fmt]'); if(!t) return;
+    exFmt = t.dataset.fmt;
+    fmtSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b===t));
+    syncQualityRow();
+  });
+  sizeSeg.addEventListener('click', e => {
+    const t = e.target.closest('button[data-size]'); if(!t) return;
+    exSize = t.dataset.size;
+    sizeSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b===t));
+    customRow.style.display = (exSize === 'custom') ? '' : 'none';
+    syncReadout();
+  });
+  customW.addEventListener('input', () => {
+    customWVal.textContent = customW.value + 'px';
+    syncReadout();
+  });
+  quality.addEventListener('input', () => {
+    qualityVal.textContent = quality.value + '%';
+  });
+  cancelBtn.addEventListener('click', () => backdrop.classList.remove('open'));
+  backdrop.addEventListener('click', e => { if(e.target === backdrop) backdrop.classList.remove('open'); });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && backdrop.classList.contains('open')) backdrop.classList.remove('open');
+  });
+
+  /* Open dialog when the topbar Export button is clicked. We replace the
+     direct exportPNG handler so the dialog is the new gate. */
+  const exportBtn = document.getElementById('btnExport');
+  exportBtn.replaceWith(exportBtn.cloneNode(true));   // strip old listeners
+  document.getElementById('btnExport').addEventListener('click', () => {
+    syncReadout();
+    syncQualityRow();
+    backdrop.classList.add('open');
+  });
+
+  downloadBtn.addEventListener('click', async () => {
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = '⏳ Rendering...';
+    try {
+      const dims = getOutputDims();
+      const q = +quality.value / 100;
+      await runExport({format: exFmt, outputW: dims.w, outputH: dims.h, quality: q});
+      backdrop.classList.remove('open');
+    } catch(err) {
+      console.error(err);
+      toast('Export failed — see console');
+    } finally {
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = 'Download';
+    }
+  });
+
+  /* The actual rasterizer. Renders the canvas at the requested output width
+     and triggers a download in the requested format. */
+  window.runExport = async function(opts){
+    const fmt = FORMATS[state.format];
+    const canvas = document.getElementById('canvas');
+    const scale = opts.outputW / fmt.w;
+
+    // Suspend the zoom transform so html2canvas reads the canvas at 1×.
+    const wrap = document.getElementById('canvasWrap');
+    const prevTransform = wrap.style.transform;
+    wrap.style.transform = 'scale(1)';
+
+    try {
+      const rendered = await html2canvas(canvas, {
+        scale,
+        useCORS: true, allowTaint: true,
+        backgroundColor: opts.format === 'jpeg' ? '#ffffff' : null,
+        logging: false,
+        width: fmt.w, height: fmt.h,
+      });
+      const link = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      const ext = opts.format === 'jpeg' ? 'jpg' : 'png';
+      const mime = opts.format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      link.download = `goSTOPS_${state.format}_${opts.outputW}w_${stamp}.${ext}`;
+      link.href = opts.format === 'jpeg'
+        ? rendered.toDataURL(mime, opts.quality)
+        : rendered.toDataURL(mime);
+      link.click();
+      toast(`${ext.toUpperCase()} downloaded ✓`);
+    } finally {
+      wrap.style.transform = prevTransform;
+    }
+  };
+})();
 </script>
 </body>
 </html>

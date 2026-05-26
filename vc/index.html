@@ -77,14 +77,14 @@
     margin:0 auto; padding:30px 0 16px;
   }
 
-  /* header — official wordmark + controls */
+  /* header — wordmark left, controls right */
   .topbar{
     position:relative; z-index:6;
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:22px;
+    gap:12px; margin-bottom:24px;
   }
-  .logo-wordmark{height:26px; width:auto; display:block;}
-  .controls{display:flex; gap:8px;}
+  .logo-wordmark{height:38px; width:auto; display:block;}
+  .controls{display:flex; gap:8px; flex:none;}
   .icon-btn{
     width:40px;height:40px;border-radius:50%;
     border:1px solid var(--border); background:var(--surface);
@@ -242,6 +242,60 @@
   .offer-cta{background:#09090F;color:#FDF8F6;}
   html[data-theme="dark"] .offer-cta{background:#FDF8F6;color:#09090F;}
 
+  /* office card — address (2/3) + map widget (1/3) */
+  .office{
+    margin-top:16px; display:flex; gap:9px; text-align:left;
+  }
+  .office-left{
+    flex:2 1 0; min-width:0;
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:14px; padding:12px 14px 13px;
+  }
+  .office-head{display:flex; align-items:center; gap:8px;}
+  .office-pin{
+    width:24px;height:24px;flex:none;border-radius:50%;
+    background:var(--pink);display:grid;place-items:center;color:#fff;
+  }
+  .office-pin svg{width:13px;height:13px;}
+  .office-label{
+    font-weight:900;font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--text);
+    flex:1; min-width:0;
+  }
+  .copy-addr-btn{
+    flex:none;width:28px;height:28px;border-radius:8px;
+    background:transparent;border:1px solid var(--border);
+    color:var(--muted);cursor:pointer;font-family:inherit;
+    display:grid;place-items:center;
+    transition:transform .14s ease,background .2s ease,color .2s ease;
+  }
+  .copy-addr-btn:hover{background:var(--surface);color:var(--text);}
+  .copy-addr-btn:active{transform:scale(.9);}
+  .copy-addr-btn svg{width:13px;height:13px;}
+  .office-addr{
+    font-size:12px;font-weight:600;color:var(--muted);
+    margin-top:8px;line-height:1.5;
+  }
+  /* clickable map tile on the right */
+  .office-map{
+    flex:1 1 0; min-width:0;
+    border:1px solid var(--border); border-radius:14px;
+    overflow:hidden; text-decoration:none; color:var(--text);
+    display:flex; flex-direction:column;
+    background:var(--surface-2);
+    transition:transform .14s ease;
+  }
+  .office-map:active{transform:scale(.97);}
+  .office-map .map-art{display:block; width:100%; height:auto; flex:none;}
+  .office-map .map-cta{
+    flex:1; display:grid; place-items:center;
+    padding:6px 6px; text-align:center;
+    font-weight:900; font-size:10.5px; letter-spacing:.04em;
+    color:var(--text); background:var(--surface);
+    border-top:1px solid var(--border);
+    line-height:1.2;
+  }
+
   /* socials */
   .socials-label{
     margin-top:24px;font-weight:800;font-size:11px;
@@ -384,6 +438,43 @@
         </a>
       </div>
 
+      <!-- office -->
+      <div class="office" id="officeBlock">
+        <div class="office-left">
+          <div class="office-head">
+            <span class="office-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s-7-8-7-13a7 7 0 1 1 14 0c0 5-7 13-7 13z"/>
+                <circle cx="12" cy="9" r="2.6" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            <span class="office-label" id="officeLabel"></span>
+            <button class="copy-addr-btn" id="copyAddrBtn" title="Copy address" aria-label="Copy address">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="8" y="8" width="12" height="12" rx="2"/>
+                <path d="M5 16V6a2 2 0 0 1 2-2h10"/>
+              </svg>
+            </button>
+          </div>
+          <div class="office-addr" id="officeAddr"></div>
+        </div>
+        <a class="office-map" id="officeBtn" target="_blank" rel="noopener" aria-label="Get directions">
+          <svg class="map-art" viewBox="0 0 130 86" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+            <rect width="130" height="86" fill="#E8F2F2"/>
+            <rect x="0" y="0" width="44" height="34" fill="#D6EFE4"/>
+            <rect x="90" y="56" width="40" height="30" fill="#FFF1D6"/>
+            <path d="M-5 60 Q35 38 70 50 T135 32" stroke="#fff" stroke-width="6" fill="none"/>
+            <path d="M48 -5 Q56 25 70 45 T82 92" stroke="#fff" stroke-width="5" fill="none"/>
+            <g transform="translate(70 36)">
+              <circle r="11" fill="#ED3668"/>
+              <path d="M-8 6 L0 22 L8 6 Z" fill="#ED3668"/>
+              <circle r="4" cy="-1" fill="#fff"/>
+            </g>
+          </svg>
+          <span class="map-cta">Get Directions &rsaquo;</span>
+        </a>
+      </div>
+
       <!-- offer -->
       <div class="offer" id="offerBlock">
         <div class="offer-inner">
@@ -462,8 +553,15 @@ const CONFIG = {
     { type:"web",       url:"https://www.gostops.com"          }   // EDIT
   ],
 
+  /* --- office address shown on the card --- */
+  office: {
+    label   : "Bengaluru Office",              // EDIT
+    address : "754/L-185, Sector 6, Behind Silk Board Bus Stand, Outer Ring Road, Bengaluru, Karnataka 560102",  // EDIT
+    mapsUrl : ""                                // EDIT  — leave "" and one will be built from the address
+  },
+
   /* --- footer --- */
-  tagline : "Stay. Explore. Belong.",           // EDIT
+  tagline : "goMORE. beMORE.",                  // EDIT
   website : "www.gostops.com"
 };
 /* ================ END OF CONFIG — no edits needed below ================ */
@@ -547,6 +645,23 @@ const sWrap = $("socials");
 if (!sWrap.children.length){
   $("socials").style.display = "none";
   document.querySelector(".socials-label").style.display = "none";
+}
+
+/* office */
+if (C.office && C.office.address){
+  $("officeLabel").textContent = C.office.label || "Office";
+  $("officeAddr").textContent  = C.office.address;
+  const url = C.office.mapsUrl ||
+    ("https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(C.office.address));
+  $("officeBtn").href = url;
+  $("copyAddrBtn").addEventListener("click", (e)=>{
+    e.preventDefault();
+    navigator.clipboard && navigator.clipboard.writeText(C.office.address)
+      .then(()=>showToast("Address copied"))
+      .catch(()=>showToast("Address: "+C.office.address));
+  });
+} else {
+  $("officeBlock").style.display = "none";
 }
 
 /* footer */
